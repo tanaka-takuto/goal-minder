@@ -11,8 +11,8 @@ add-enum-types = true
   pass    = "password"
   sslmode = "false"
 
-[foreign_keys.account_password_login_fk]
-table = "account_password_login"
+[foreign_keys.account_id_fk]
+table = "account_password"
 column = "account_id"
 foreign_table = "account"
 foreign_column = "id"

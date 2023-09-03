@@ -91,15 +91,26 @@ var AccountPasswordWhere = struct {
 
 // AccountPasswordRels is where relationship names are stored.
 var AccountPasswordRels = struct {
-}{}
+	Account string
+}{
+	Account: "Account",
+}
 
 // accountPasswordR is where relationships are stored.
 type accountPasswordR struct {
+	Account *Account `boil:"Account" json:"Account" toml:"Account" yaml:"Account"`
 }
 
 // NewStruct creates a new relationship struct
 func (*accountPasswordR) NewStruct() *accountPasswordR {
 	return &accountPasswordR{}
+}
+
+func (r *accountPasswordR) GetAccount() *Account {
+	if r == nil {
+		return nil
+	}
+	return r.Account
 }
 
 // accountPasswordL is where Load methods for each relationship are stored.
@@ -389,6 +400,184 @@ func (q accountPasswordQuery) Exists(ctx context.Context, exec boil.ContextExecu
 	}
 
 	return count > 0, nil
+}
+
+// Account pointed to by the foreign key.
+func (o *AccountPassword) Account(mods ...qm.QueryMod) accountQuery {
+	queryMods := []qm.QueryMod{
+		qm.Where("`id` = ?", o.AccountID),
+	}
+
+	queryMods = append(queryMods, mods...)
+
+	return Accounts(queryMods...)
+}
+
+// LoadAccount allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for an N-1 relationship.
+func (accountPasswordL) LoadAccount(ctx context.Context, e boil.ContextExecutor, singular bool, maybeAccountPassword interface{}, mods queries.Applicator) error {
+	var slice []*AccountPassword
+	var object *AccountPassword
+
+	if singular {
+		var ok bool
+		object, ok = maybeAccountPassword.(*AccountPassword)
+		if !ok {
+			object = new(AccountPassword)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybeAccountPassword)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeAccountPassword))
+			}
+		}
+	} else {
+		s, ok := maybeAccountPassword.(*[]*AccountPassword)
+		if ok {
+			slice = *s
+		} else {
+			ok = queries.SetFromEmbeddedStruct(&slice, maybeAccountPassword)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeAccountPassword))
+			}
+		}
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &accountPasswordR{}
+		}
+		args = append(args, object.AccountID)
+
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &accountPasswordR{}
+			}
+
+			for _, a := range args {
+				if a == obj.AccountID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.AccountID)
+
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	query := NewQuery(
+		qm.From(`account`),
+		qm.WhereIn(`account.id in ?`, args...),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.QueryContext(ctx, e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load Account")
+	}
+
+	var resultSlice []*Account
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice Account")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results of eager load for account")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for account")
+	}
+
+	if len(accountAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
+				return err
+			}
+		}
+	}
+
+	if len(resultSlice) == 0 {
+		return nil
+	}
+
+	if singular {
+		foreign := resultSlice[0]
+		object.R.Account = foreign
+		if foreign.R == nil {
+			foreign.R = &accountR{}
+		}
+		foreign.R.AccountPassword = object
+		return nil
+	}
+
+	for _, local := range slice {
+		for _, foreign := range resultSlice {
+			if local.AccountID == foreign.ID {
+				local.R.Account = foreign
+				if foreign.R == nil {
+					foreign.R = &accountR{}
+				}
+				foreign.R.AccountPassword = local
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
+// SetAccount of the accountPassword to the related item.
+// Sets o.R.Account to related.
+// Adds o to related.R.AccountPassword.
+func (o *AccountPassword) SetAccount(ctx context.Context, exec boil.ContextExecutor, insert bool, related *Account) error {
+	var err error
+	if insert {
+		if err = related.Insert(ctx, exec, boil.Infer()); err != nil {
+			return errors.Wrap(err, "failed to insert into foreign table")
+		}
+	}
+
+	updateQuery := fmt.Sprintf(
+		"UPDATE `account_password` SET %s WHERE %s",
+		strmangle.SetParamNames("`", "`", 0, []string{"account_id"}),
+		strmangle.WhereClause("`", "`", 0, accountPasswordPrimaryKeyColumns),
+	)
+	values := []interface{}{related.ID, o.AccountID}
+
+	if boil.IsDebug(ctx) {
+		writer := boil.DebugWriterFrom(ctx)
+		fmt.Fprintln(writer, updateQuery)
+		fmt.Fprintln(writer, values)
+	}
+	if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
+		return errors.Wrap(err, "failed to update local table")
+	}
+
+	o.AccountID = related.ID
+	if o.R == nil {
+		o.R = &accountPasswordR{
+			Account: related,
+		}
+	} else {
+		o.R.Account = related
+	}
+
+	if related.R == nil {
+		related.R = &accountR{
+			AccountPassword: o,
+		}
+	} else {
+		related.R.AccountPassword = o
+	}
+
+	return nil
 }
 
 // AccountPasswords retrieves all the records using an executor.
