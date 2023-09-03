@@ -16,20 +16,8 @@ func NewAccountRepository(db boil.ContextExecutor) *AccountRepository {
 	return &AccountRepository{db: db}
 }
 
-type CreateAccountInput struct {
-	Name  string
-	Email string
-}
-
-// ExistsAccountByEmail メールアドレスが存在するかどうかを確認する
-func (r *AccountRepository) ExistsAccountByEmail(ctx context.Context, email model.AccountEmail) (bool, error) {
-	return models.Accounts(
-		models.AccountWhere.Email.EQ(string(email)),
-	).Exists(ctx, r.db)
-}
-
-// CreateAccount アカウントを作成する
-func (r *AccountRepository) CreateAccount(ctx context.Context, account model.Account) (*model.Account, error) {
+// Create アカウントを作成する
+func (r *AccountRepository) Create(ctx context.Context, account model.Account) (*model.Account, error) {
 	var dAccount models.Account
 	dAccount.Name = string(account.Name)
 	dAccount.Email = string(account.Email)
@@ -44,4 +32,11 @@ func (r *AccountRepository) CreateAccount(ctx context.Context, account model.Acc
 		Name:  model.AccountName(dAccount.Name),
 		Email: model.AccountEmail(dAccount.Email),
 	}, nil
+}
+
+// ExistsAccountByEmail メールアドレスが存在するかどうかを確認する
+func (r *AccountRepository) ExistsAccountByEmail(ctx context.Context, email model.AccountEmail) (bool, error) {
+	return models.Accounts(
+		models.AccountWhere.Email.EQ(string(email)),
+	).Exists(ctx, r.db)
 }

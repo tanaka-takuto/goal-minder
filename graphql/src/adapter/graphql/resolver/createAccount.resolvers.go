@@ -11,17 +11,18 @@ import (
 	graphql_model "github.com/tanaka-takuto/goal-minder/adapter/graphql/model"
 	"github.com/tanaka-takuto/goal-minder/domain/model"
 	"github.com/tanaka-takuto/goal-minder/domain/usecase"
+	"github.com/tanaka-takuto/goal-minder/infra/db"
 )
 
 // CreateAccount is the resolver for the createAccount field.
 func (r *mutationResolver) CreateAccount(ctx context.Context, input *graphql_model.CreateAccountInput) (graphql_model.CreateAccountPayload, error) {
-	mInput := usecase.CreateAccountInput{
+	uInput := usecase.CreateAccountInput{
 		Name:     model.AccountName(input.Name),
 		Email:    model.AccountEmail(input.Email),
 		Password: model.NewLoginPassword(input.Password),
 	}
 
-	account, emailAlreadyExistsErr, err := usecase.CreateAccount(ctx, usecase.CreateAccountInput(mInput))
+	account, emailAlreadyExistsErr, err := usecase.CreateAccount(ctx, db.Con, usecase.CreateAccountInput(uInput))
 	if err != nil {
 		return nil, err
 	}

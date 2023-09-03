@@ -28,6 +28,8 @@ type AccountPassword struct { // アカウントID
 	HashedPassword string `boil:"hashed_password" json:"hashed_password" toml:"hashed_password" yaml:"hashed_password"`
 	// パスワード設定日時
 	SetAt time.Time `boil:"set_at" json:"set_at" toml:"set_at" yaml:"set_at"`
+	// ログイン日時
+	LoggedInAt time.Time `boil:"logged_in_at" json:"logged_in_at" toml:"logged_in_at" yaml:"logged_in_at"`
 	// 作成日時
 	CreatedAt time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	// 更新日時
@@ -41,12 +43,14 @@ var AccountPasswordColumns = struct {
 	AccountID      string
 	HashedPassword string
 	SetAt          string
+	LoggedInAt     string
 	CreatedAt      string
 	UpdatedAt      string
 }{
 	AccountID:      "account_id",
 	HashedPassword: "hashed_password",
 	SetAt:          "set_at",
+	LoggedInAt:     "logged_in_at",
 	CreatedAt:      "created_at",
 	UpdatedAt:      "updated_at",
 }
@@ -55,12 +59,14 @@ var AccountPasswordTableColumns = struct {
 	AccountID      string
 	HashedPassword string
 	SetAt          string
+	LoggedInAt     string
 	CreatedAt      string
 	UpdatedAt      string
 }{
 	AccountID:      "account_password.account_id",
 	HashedPassword: "account_password.hashed_password",
 	SetAt:          "account_password.set_at",
+	LoggedInAt:     "account_password.logged_in_at",
 	CreatedAt:      "account_password.created_at",
 	UpdatedAt:      "account_password.updated_at",
 }
@@ -71,12 +77,14 @@ var AccountPasswordWhere = struct {
 	AccountID      whereHelperint64
 	HashedPassword whereHelperstring
 	SetAt          whereHelpertime_Time
+	LoggedInAt     whereHelpertime_Time
 	CreatedAt      whereHelpertime_Time
 	UpdatedAt      whereHelpertime_Time
 }{
 	AccountID:      whereHelperint64{field: "`account_password`.`account_id`"},
 	HashedPassword: whereHelperstring{field: "`account_password`.`hashed_password`"},
 	SetAt:          whereHelpertime_Time{field: "`account_password`.`set_at`"},
+	LoggedInAt:     whereHelpertime_Time{field: "`account_password`.`logged_in_at`"},
 	CreatedAt:      whereHelpertime_Time{field: "`account_password`.`created_at`"},
 	UpdatedAt:      whereHelpertime_Time{field: "`account_password`.`updated_at`"},
 }
@@ -98,8 +106,8 @@ func (*accountPasswordR) NewStruct() *accountPasswordR {
 type accountPasswordL struct{}
 
 var (
-	accountPasswordAllColumns            = []string{"account_id", "hashed_password", "set_at", "created_at", "updated_at"}
-	accountPasswordColumnsWithoutDefault = []string{"account_id", "hashed_password", "set_at"}
+	accountPasswordAllColumns            = []string{"account_id", "hashed_password", "set_at", "logged_in_at", "created_at", "updated_at"}
+	accountPasswordColumnsWithoutDefault = []string{"account_id", "hashed_password", "set_at", "logged_in_at"}
 	accountPasswordColumnsWithDefault    = []string{"created_at", "updated_at"}
 	accountPasswordPrimaryKeyColumns     = []string{"account_id"}
 	accountPasswordGeneratedColumns      = []string{}

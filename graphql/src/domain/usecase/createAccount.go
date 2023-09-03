@@ -7,7 +7,6 @@ import (
 	"github.com/tanaka-takuto/goal-minder/adapter/repository"
 	"github.com/tanaka-takuto/goal-minder/domain/model"
 	applicationerror "github.com/tanaka-takuto/goal-minder/domain/usecase/application_error"
-	"github.com/tanaka-takuto/goal-minder/infra/db"
 )
 
 type CreateAccountInput struct {
@@ -16,10 +15,10 @@ type CreateAccountInput struct {
 	Password model.LoginPassword
 }
 
-func CreateAccount(ctx context.Context, input CreateAccountInput) (*model.Account, *applicationerror.EmailAlreadyExistsError, error) {
+func CreateAccount(ctx context.Context, db *sql.DB, input CreateAccountInput) (*model.Account, *applicationerror.EmailAlreadyExistsError, error) {
 	var account *model.Account
 	var emailAlreadyExistsError *applicationerror.EmailAlreadyExistsError
-	err := repository.Transaction(ctx, db.Con, func(ctx context.Context, tx *sql.Tx) error {
+	err := repository.Transaction(ctx, db, func(ctx context.Context, tx *sql.Tx) error {
 		accountRepo := repository.NewAccountRepository(tx)
 
 		// メールアドレスの存在チェック
@@ -27,12 +26,12 @@ func CreateAccount(ctx context.Context, input CreateAccountInput) (*model.Accoun
 			return err
 		} else if exists {
 			emailAlreadyExistsError = &applicationerror.EmailAlreadyExistsErrorInstanse
-			return nil
+			return emailAlreadyExistsError
 		}
 
 		// アカウントを作成
 		newAccount := model.NewAccount(input.Name, input.Email)
-		a, err := accountRepo.CreateAccount(ctx, newAccount)
+		a, err := accountRepo.Create(ctx, newAccount)
 		if err != nil {
 			return err
 		}

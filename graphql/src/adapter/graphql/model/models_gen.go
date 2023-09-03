@@ -31,8 +31,6 @@ type Account struct {
 
 func (Account) IsCreateAccountPayload() {}
 
-func (Account) IsLoginPayload() {}
-
 // アカウント作成インプット
 type CreateAccountInput struct {
 	// 名前
@@ -56,7 +54,18 @@ func (this EmailAlreadyExistsError) GetMessage() string { return this.Message }
 
 func (EmailAlreadyExistsError) IsCreateAccountPayload() {}
 
-func (EmailAlreadyExistsError) IsLoginPayload() {}
+// メールアドレスまたはパスワードが間違っています
+type IncorrectEmailOrPasswordError struct {
+	// エラーメッセージ
+	Message string `json:"message"`
+}
+
+func (IncorrectEmailOrPasswordError) IsApplicationError() {}
+
+// エラーメッセージ
+func (this IncorrectEmailOrPasswordError) GetMessage() string { return this.Message }
+
+func (IncorrectEmailOrPasswordError) IsLoginPayload() {}
 
 // ログインインプット
 type LoginInput struct {
@@ -65,3 +74,13 @@ type LoginInput struct {
 	// パスワード
 	Password string `json:"password"`
 }
+
+// 自分自身
+type Me struct {
+	// ID
+	ID string `json:"id"`
+	// トークン
+	Token string `json:"token"`
+}
+
+func (Me) IsLoginPayload() {}

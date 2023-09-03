@@ -54,6 +54,15 @@ type ComplexityRoot struct {
 		Message func(childComplexity int) int
 	}
 
+	IncorrectEmailOrPasswordError struct {
+		Message func(childComplexity int) int
+	}
+
+	Me struct {
+		ID    func(childComplexity int) int
+		Token func(childComplexity int) int
+	}
+
 	Mutation struct {
 		CreateAccount func(childComplexity int, input *graphql_model.CreateAccountInput) int
 		Login         func(childComplexity int, input *graphql_model.LoginInput) int
@@ -114,6 +123,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.EmailAlreadyExistsError.Message(childComplexity), true
+
+	case "IncorrectEmailOrPasswordError.message":
+		if e.complexity.IncorrectEmailOrPasswordError.Message == nil {
+			break
+		}
+
+		return e.complexity.IncorrectEmailOrPasswordError.Message(childComplexity), true
+
+	case "Me.id":
+		if e.complexity.Me.ID == nil {
+			break
+		}
+
+		return e.complexity.Me.ID(childComplexity), true
+
+	case "Me.token":
+		if e.complexity.Me.Token == nil {
+			break
+		}
+
+		return e.complexity.Me.Token(childComplexity), true
 
 	case "Mutation.createAccount":
 		if e.complexity.Mutation.CreateAccount == nil {
@@ -274,6 +304,17 @@ type EmailAlreadyExistsError implements ApplicationError{
 }
 
 `, BuiltIn: false},
+	{Name: "../../infra/graphql/schema/error/incorrectEmailOrPasswordError.graphql", Input: `"""
+メールアドレスまたはパスワードが間違っています
+"""
+type IncorrectEmailOrPasswordError implements ApplicationError{
+  """
+  エラーメッセージ
+  """
+  message: String!
+}
+
+`, BuiltIn: false},
 	{Name: "../../infra/graphql/schema/model/account.graphql", Input: `"""
 アカウント
 """
@@ -292,6 +333,22 @@ type Account {
   メールアドレス
   """
   email: String!
+}
+
+`, BuiltIn: false},
+	{Name: "../../infra/graphql/schema/model/me.graphql", Input: `"""
+自分自身
+"""
+type Me {
+  """
+  ID
+  """
+  id: ID!
+  
+  """
+  トークン
+  """
+  token: String!
 }
 
 `, BuiltIn: false},
@@ -352,7 +409,7 @@ input LoginInput {
 """
 ログインペイロード
 """
-union LoginPayload = Account | EmailAlreadyExistsError
+union LoginPayload = Me | IncorrectEmailOrPasswordError
 `, BuiltIn: false},
 	{Name: "../../infra/graphql/schema/query/me.graphql", Input: `extend type Query {
   me: Account
@@ -614,6 +671,138 @@ func (ec *executionContext) _EmailAlreadyExistsError_message(ctx context.Context
 func (ec *executionContext) fieldContext_EmailAlreadyExistsError_message(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "EmailAlreadyExistsError",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _IncorrectEmailOrPasswordError_message(ctx context.Context, field graphql.CollectedField, obj *graphql_model.IncorrectEmailOrPasswordError) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_IncorrectEmailOrPasswordError_message(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Message, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_IncorrectEmailOrPasswordError_message(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "IncorrectEmailOrPasswordError",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Me_id(ctx context.Context, field graphql.CollectedField, obj *graphql_model.Me) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Me_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Me_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Me",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Me_token(ctx context.Context, field graphql.CollectedField, obj *graphql_model.Me) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Me_token(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Token, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Me_token(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Me",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -2785,6 +2974,13 @@ func (ec *executionContext) _ApplicationError(ctx context.Context, sel ast.Selec
 			return graphql.Null
 		}
 		return ec._EmailAlreadyExistsError(ctx, sel, obj)
+	case graphql_model.IncorrectEmailOrPasswordError:
+		return ec._IncorrectEmailOrPasswordError(ctx, sel, &obj)
+	case *graphql_model.IncorrectEmailOrPasswordError:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._IncorrectEmailOrPasswordError(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -2817,20 +3013,20 @@ func (ec *executionContext) _LoginPayload(ctx context.Context, sel ast.Selection
 	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
-	case graphql_model.Account:
-		return ec._Account(ctx, sel, &obj)
-	case *graphql_model.Account:
+	case graphql_model.Me:
+		return ec._Me(ctx, sel, &obj)
+	case *graphql_model.Me:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._Account(ctx, sel, obj)
-	case graphql_model.EmailAlreadyExistsError:
-		return ec._EmailAlreadyExistsError(ctx, sel, &obj)
-	case *graphql_model.EmailAlreadyExistsError:
+		return ec._Me(ctx, sel, obj)
+	case graphql_model.IncorrectEmailOrPasswordError:
+		return ec._IncorrectEmailOrPasswordError(ctx, sel, &obj)
+	case *graphql_model.IncorrectEmailOrPasswordError:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._EmailAlreadyExistsError(ctx, sel, obj)
+		return ec._IncorrectEmailOrPasswordError(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -2840,7 +3036,7 @@ func (ec *executionContext) _LoginPayload(ctx context.Context, sel ast.Selection
 
 // region    **************************** object.gotpl ****************************
 
-var accountImplementors = []string{"Account", "CreateAccountPayload", "LoginPayload"}
+var accountImplementors = []string{"Account", "CreateAccountPayload"}
 
 func (ec *executionContext) _Account(ctx context.Context, sel ast.SelectionSet, obj *graphql_model.Account) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, accountImplementors)
@@ -2889,7 +3085,7 @@ func (ec *executionContext) _Account(ctx context.Context, sel ast.SelectionSet, 
 	return out
 }
 
-var emailAlreadyExistsErrorImplementors = []string{"EmailAlreadyExistsError", "ApplicationError", "CreateAccountPayload", "LoginPayload"}
+var emailAlreadyExistsErrorImplementors = []string{"EmailAlreadyExistsError", "ApplicationError", "CreateAccountPayload"}
 
 func (ec *executionContext) _EmailAlreadyExistsError(ctx context.Context, sel ast.SelectionSet, obj *graphql_model.EmailAlreadyExistsError) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, emailAlreadyExistsErrorImplementors)
@@ -2902,6 +3098,89 @@ func (ec *executionContext) _EmailAlreadyExistsError(ctx context.Context, sel as
 			out.Values[i] = graphql.MarshalString("EmailAlreadyExistsError")
 		case "message":
 			out.Values[i] = ec._EmailAlreadyExistsError_message(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var incorrectEmailOrPasswordErrorImplementors = []string{"IncorrectEmailOrPasswordError", "ApplicationError", "LoginPayload"}
+
+func (ec *executionContext) _IncorrectEmailOrPasswordError(ctx context.Context, sel ast.SelectionSet, obj *graphql_model.IncorrectEmailOrPasswordError) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, incorrectEmailOrPasswordErrorImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("IncorrectEmailOrPasswordError")
+		case "message":
+			out.Values[i] = ec._IncorrectEmailOrPasswordError_message(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var meImplementors = []string{"Me", "LoginPayload"}
+
+func (ec *executionContext) _Me(ctx context.Context, sel ast.SelectionSet, obj *graphql_model.Me) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, meImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Me")
+		case "id":
+			out.Values[i] = ec._Me_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "token":
+			out.Values[i] = ec._Me_token(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

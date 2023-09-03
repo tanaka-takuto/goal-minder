@@ -6,12 +6,29 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 
 	graphql_model "github.com/tanaka-takuto/goal-minder/adapter/graphql/model"
+	"github.com/tanaka-takuto/goal-minder/domain/model"
+	"github.com/tanaka-takuto/goal-minder/domain/usecase"
+	"github.com/tanaka-takuto/goal-minder/infra/db"
 )
 
 // Login is the resolver for the login field.
 func (r *mutationResolver) Login(ctx context.Context, input *graphql_model.LoginInput) (graphql_model.LoginPayload, error) {
-	panic(fmt.Errorf("not implemented: Login - login"))
+	uInput := usecase.LoginInput{
+		Email:    model.AccountEmail(input.Email),
+		Password: input.Password,
+	}
+
+	account, incorrectEmailOrPasswordError, err := usecase.Login(ctx, db.Con, uInput)
+	if err != nil {
+		return nil, err
+	} else if incorrectEmailOrPasswordError != nil {
+		return graphql_model.IncorrectEmailOrPasswordError{Message: incorrectEmailOrPasswordError.Error()}, nil
+	}
+
+	return graphql_model.Me{
+		ID:    string(account.ID),
+		Token: "token",
+	}, nil
 }
