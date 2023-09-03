@@ -18,6 +18,7 @@ func init() {
 		Addr:                 "db:3306",
 		DBName:               "GM",
 		AllowNativePasswords: true,
+		ParseTime:            true,
 	}
 
 	con, err := sql.Open("mysql", config.FormatDSN())
