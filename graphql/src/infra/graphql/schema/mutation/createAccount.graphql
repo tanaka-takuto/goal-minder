@@ -1,0 +1,31 @@
+extend type Mutation {
+  """
+  アカウントを作成する
+  """
+  createAccount(input: CreateAccountInput): CreateAccountPayload!
+}
+
+"""
+アカウント作成インプット
+"""
+input CreateAccountInput {
+  """
+  名前
+  """
+  name: String!
+
+  """
+  メールアドレス
+  """
+  email:String!
+  
+  """
+  パスワード
+  """
+  password:String!
+}
+
+"""
+アカウント作成ペイロード
+"""
+union CreateAccountPayload = Account | EmailAlreadyExistsError

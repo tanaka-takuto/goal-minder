@@ -1,0 +1,10 @@
+"""
+指定されたメールアドレスは既に登録されています
+"""
+type EmailAlreadyExistsError implements ApplicationError{
+  """
+  エラーメッセージ
+  """
+  message: String!
+}
+

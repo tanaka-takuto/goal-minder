@@ -1,0 +1,26 @@
+extend type Mutation {
+  """
+  ログイン
+  """
+  login(input: LoginInput): LoginPayload!
+}
+
+"""
+ログインインプット
+"""
+input LoginInput {
+  """
+  メールアドレス
+  """
+  email:String!
+  
+  """
+  パスワード
+  """
+  password:String!
+}
+
+"""
+ログインペイロード
+"""
+union LoginPayload = Account | EmailAlreadyExistsError

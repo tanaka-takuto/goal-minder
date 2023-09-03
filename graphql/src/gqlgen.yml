@@ -1,0 +1,37 @@
+schema:
+  - infra/graphql/schema/**/*.graphql
+
+exec:
+  filename: adapter/graphql/generated.go
+  package: graphql
+
+model:
+  filename: adapter/graphql/model/models_gen.go
+  package: graphql_model
+
+resolver:
+  layout: follow-schema
+  dir: adapter/graphql/resolver
+  package: resolver
+  filename_template: "{name}.resolvers.go"
+
+# autobind:
+#   - "github.com/tanaka-takuto/goal-minder/domain/usecase/application_error"
+
+models:
+  ID:
+    model:
+      - github.com/99designs/gqlgen/graphql.ID
+      - github.com/99designs/gqlgen/graphql.Int
+      - github.com/99designs/gqlgen/graphql.Int64
+      - github.com/99designs/gqlgen/graphql.Int32
+  Int:
+    model:
+      - github.com/99designs/gqlgen/graphql.Int
+      - github.com/99designs/gqlgen/graphql.Int64
+      - github.com/99designs/gqlgen/graphql.Int32
+
+  User:
+    fields:
+      tudos:
+        resolver: true

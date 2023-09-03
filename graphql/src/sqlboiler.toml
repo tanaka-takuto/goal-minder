@@ -1,0 +1,18 @@
+output   = "adapter/sqlboiler"
+wipe     = true
+no-tests = true
+add-enum-types = true
+
+[mysql]
+  dbname  = "GM"
+  host    = "db"
+  port    = 3306
+  user    = "root"
+  pass    = "password"
+  sslmode = "false"
+
+[foreign_keys.account_password_login_fk]
+table = "account_password_login"
+column = "account_id"
+foreign_table = "account"
+foreign_column = "id"

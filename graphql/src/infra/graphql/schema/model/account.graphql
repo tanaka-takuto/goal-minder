@@ -1,0 +1,20 @@
+"""
+アカウント
+"""
+type Account {
+  """
+  ID
+  """
+  id: ID!
+  
+  """
+  名前
+  """
+  name: String!
+  
+  """
+  メールアドレス
+  """
+  email: String!
+}
+

@@ -1,0 +1,9 @@
+"""
+アプリケーションエラー
+"""
+interface ApplicationError {
+  """
+  エラーメッセージ
+  """
+  message: String!
+}

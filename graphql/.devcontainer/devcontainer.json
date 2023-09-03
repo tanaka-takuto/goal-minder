@@ -1,0 +1,6 @@
+{
+	"name": "GM develop For VSCode",
+	"dockerComposeFile": "../docker/docker-compose.yml",
+	"service": "graphql",
+	"workspaceFolder": "/app"
+}
