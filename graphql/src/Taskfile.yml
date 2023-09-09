@@ -1,0 +1,26 @@
+# https://taskfile.dev
+
+version: '3'
+
+vars:
+  GREETING: Hello, World!
+  MYSQLDEF: mysqldef -uroot -ppassword -hGM-db -P3306 GM --config=infra/db/schema/mysqldef/mysqldef.yml --file=infra/db/schema/mysqldef/ddl.sql
+
+tasks:
+  default:
+    cmds:
+      - echo "{{.GREETING}}"
+    silent: true
+
+  dbDryRun:
+    cmds:
+      - '{{.MYSQLDEF}} --dry-run'
+
+  dbApply:
+    cmds:
+      - '{{.MYSQLDEF}}'
+
+  dbExport:
+    cmds:
+      - '{{.MYSQLDEF}} --export > infra/db/schema/mysqldef/ddl.sql'
+

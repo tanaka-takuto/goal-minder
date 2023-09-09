@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	models "github.com/tanaka-takuto/goal-minder/adapter/sqlboiler"
+	"github.com/tanaka-takuto/goal-minder/adapter/sqlboiler/models"
 	"github.com/tanaka-takuto/goal-minder/domain/model"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"

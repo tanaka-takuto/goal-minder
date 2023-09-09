@@ -1,4 +1,4 @@
-output   = "adapter/sqlboiler"
+output   = "../models"
 wipe     = true
 no-tests = true
 add-enum-types = true
