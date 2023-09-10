@@ -21,6 +21,17 @@ input LoginInput {
 }
 
 """
+ログイン成功
+"""
+type LoginSuccess {
+  """
+  アカウント
+  """
+  account:Account!
+}
+
+
+"""
 ログインペイロード
 """
-union LoginPayload = Me | IncorrectEmailOrPasswordError
+union LoginPayload = LoginSuccess | IncorrectEmailOrPasswordError

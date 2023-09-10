@@ -58,6 +58,10 @@ type ComplexityRoot struct {
 		Message func(childComplexity int) int
 	}
 
+	LoginSuccess struct {
+		Account func(childComplexity int) int
+	}
+
 	Me struct {
 		ID    func(childComplexity int) int
 		Token func(childComplexity int) int
@@ -66,6 +70,7 @@ type ComplexityRoot struct {
 	Mutation struct {
 		CreateAccount func(childComplexity int, input *graphql_model.CreateAccountInput) int
 		Login         func(childComplexity int, input *graphql_model.LoginInput) int
+		Logout        func(childComplexity int) int
 	}
 
 	Query struct {
@@ -76,6 +81,7 @@ type ComplexityRoot struct {
 type MutationResolver interface {
 	CreateAccount(ctx context.Context, input *graphql_model.CreateAccountInput) (graphql_model.CreateAccountPayload, error)
 	Login(ctx context.Context, input *graphql_model.LoginInput) (graphql_model.LoginPayload, error)
+	Logout(ctx context.Context) (bool, error)
 }
 type QueryResolver interface {
 	Me(ctx context.Context) (*graphql_model.Account, error)
@@ -131,6 +137,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.IncorrectEmailOrPasswordError.Message(childComplexity), true
 
+	case "LoginSuccess.account":
+		if e.complexity.LoginSuccess.Account == nil {
+			break
+		}
+
+		return e.complexity.LoginSuccess.Account(childComplexity), true
+
 	case "Me.id":
 		if e.complexity.Me.ID == nil {
 			break
@@ -168,6 +181,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.Login(childComplexity, args["input"].(*graphql_model.LoginInput)), true
+
+	case "Mutation.logout":
+		if e.complexity.Mutation.Logout == nil {
+			break
+		}
+
+		return e.complexity.Mutation.Logout(childComplexity), true
 
 	case "Query.me":
 		if e.complexity.Query.Me == nil {
@@ -407,9 +427,27 @@ input LoginInput {
 }
 
 """
+ログイン成功
+"""
+type LoginSuccess {
+  """
+  アカウント
+  """
+  account:Account!
+}
+
+
+"""
 ログインペイロード
 """
-union LoginPayload = Me | IncorrectEmailOrPasswordError
+union LoginPayload = LoginSuccess | IncorrectEmailOrPasswordError
+`, BuiltIn: false},
+	{Name: "../../infra/graphql/schema/mutation/logout.graphql", Input: `extend type Mutation {
+  """
+  ログアウト
+  """
+  logout: Boolean!
+}
 `, BuiltIn: false},
 	{Name: "../../infra/graphql/schema/query/me.graphql", Input: `extend type Query {
   me: Account
@@ -725,6 +763,58 @@ func (ec *executionContext) fieldContext_IncorrectEmailOrPasswordError_message(c
 	return fc, nil
 }
 
+func (ec *executionContext) _LoginSuccess_account(ctx context.Context, field graphql.CollectedField, obj *graphql_model.LoginSuccess) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_LoginSuccess_account(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Account, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*graphql_model.Account)
+	fc.Result = res
+	return ec.marshalNAccount2ᚖgithubᚗcomᚋtanakaᚑtakutoᚋgoalᚑminderᚋadapterᚋgraphqlᚋmodelᚐAccount(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_LoginSuccess_account(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LoginSuccess",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Account_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Account_name(ctx, field)
+			case "email":
+				return ec.fieldContext_Account_email(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Account", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Me_id(ctx context.Context, field graphql.CollectedField, obj *graphql_model.Me) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Me_id(ctx, field)
 	if err != nil {
@@ -919,6 +1009,50 @@ func (ec *executionContext) fieldContext_Mutation_login(ctx context.Context, fie
 	if fc.Args, err = ec.field_Mutation_login_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_logout(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_logout(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().Logout(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_logout(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
 	}
 	return fc, nil
 }
@@ -3013,13 +3147,13 @@ func (ec *executionContext) _LoginPayload(ctx context.Context, sel ast.Selection
 	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
-	case graphql_model.Me:
-		return ec._Me(ctx, sel, &obj)
-	case *graphql_model.Me:
+	case graphql_model.LoginSuccess:
+		return ec._LoginSuccess(ctx, sel, &obj)
+	case *graphql_model.LoginSuccess:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._Me(ctx, sel, obj)
+		return ec._LoginSuccess(ctx, sel, obj)
 	case graphql_model.IncorrectEmailOrPasswordError:
 		return ec._IncorrectEmailOrPasswordError(ctx, sel, &obj)
 	case *graphql_model.IncorrectEmailOrPasswordError:
@@ -3163,7 +3297,46 @@ func (ec *executionContext) _IncorrectEmailOrPasswordError(ctx context.Context, 
 	return out
 }
 
-var meImplementors = []string{"Me", "LoginPayload"}
+var loginSuccessImplementors = []string{"LoginSuccess", "LoginPayload"}
+
+func (ec *executionContext) _LoginSuccess(ctx context.Context, sel ast.SelectionSet, obj *graphql_model.LoginSuccess) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, loginSuccessImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("LoginSuccess")
+		case "account":
+			out.Values[i] = ec._LoginSuccess_account(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var meImplementors = []string{"Me"}
 
 func (ec *executionContext) _Me(ctx context.Context, sel ast.SelectionSet, obj *graphql_model.Me) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, meImplementors)
@@ -3236,6 +3409,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "login":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_login(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "logout":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_logout(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -3657,6 +3837,16 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 // endregion **************************** object.gotpl ****************************
 
 // region    ***************************** type.gotpl *****************************
+
+func (ec *executionContext) marshalNAccount2ᚖgithubᚗcomᚋtanakaᚑtakutoᚋgoalᚑminderᚋadapterᚋgraphqlᚋmodelᚐAccount(ctx context.Context, sel ast.SelectionSet, v *graphql_model.Account) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Account(ctx, sel, v)
+}
 
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)

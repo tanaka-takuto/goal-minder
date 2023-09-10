@@ -8,16 +8,23 @@ import (
 	"context"
 	"fmt"
 
-	graphql1 "github.com/tanaka-takuto/goal-minder/adapter/graphql"
+	"github.com/tanaka-takuto/goal-minder/adapter/graphql"
 	graphql_model "github.com/tanaka-takuto/goal-minder/adapter/graphql/model"
+	modelContext "github.com/tanaka-takuto/goal-minder/domain/context"
 )
 
 // Me is the resolver for the me field.
 func (r *queryResolver) Me(ctx context.Context) (*graphql_model.Account, error) {
-	panic(fmt.Errorf("not implemented: Me - me"))
+	accountID := modelContext.GetAccountID(ctx)
+	fmt.Println(*accountID)
+	return &graphql_model.Account{
+		ID:    "1",
+		Name:  "tanaka",
+		Email: "",
+	}, nil
 }
 
 // Query returns graphql1.QueryResolver implementation.
-func (r *Resolver) Query() graphql1.QueryResolver { return &queryResolver{r} }
+func (r *Resolver) Query() graphql.QueryResolver { return &queryResolver{r} }
 
 type queryResolver struct{ *Resolver }

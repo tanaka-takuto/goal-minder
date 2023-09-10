@@ -14,6 +14,7 @@ RUN go install github.com/cweill/gotests/gotests@v1.6.0 && \
 
 # develop tools
 RUN go install github.com/cosmtrek/air@latest && \
+    go install github.com/go-task/task/v3/cmd/task@latest && \
     go install github.com/99designs/gqlgen@latest && \
     go install github.com/volatiletech/sqlboiler/v4@latest && \
     go install github.com/volatiletech/sqlboiler/v4/drivers/sqlboiler-mysql@latest && \

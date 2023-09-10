@@ -1,14 +1,5 @@
 package model
 
-// AccountID アカウントID
-type AccountID int
-
-// AccountName 名前
-type AccountName string
-
-// AccountEmail メールアドレス
-type AccountEmail string
-
 // Account アカウント
 type Account struct {
 	ID    AccountID    // アカウントID

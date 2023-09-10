@@ -9,6 +9,7 @@ import (
 
 	graphql1 "github.com/tanaka-takuto/goal-minder/adapter/graphql"
 	graphql_model "github.com/tanaka-takuto/goal-minder/adapter/graphql/model"
+	"github.com/tanaka-takuto/goal-minder/adapter/graphql/vo"
 	"github.com/tanaka-takuto/goal-minder/domain/model"
 	"github.com/tanaka-takuto/goal-minder/domain/usecase"
 	"github.com/tanaka-takuto/goal-minder/infra/db"
@@ -31,7 +32,7 @@ func (r *mutationResolver) CreateAccount(ctx context.Context, input *graphql_mod
 	}
 
 	return &graphql_model.Account{
-		ID:    string(account.ID),
+		ID:    vo.NewGlobalUniqueID("accountID", int(account.ID)).String(),
 		Name:  string(account.Name),
 		Email: string(account.Email),
 	}, nil

@@ -75,6 +75,14 @@ type LoginInput struct {
 	Password string `json:"password"`
 }
 
+// ログイン成功
+type LoginSuccess struct {
+	// アカウント
+	Account *Account `json:"account"`
+}
+
+func (LoginSuccess) IsLoginPayload() {}
+
 // 自分自身
 type Me struct {
 	// ID
@@ -82,5 +90,3 @@ type Me struct {
 	// トークン
 	Token string `json:"token"`
 }
-
-func (Me) IsLoginPayload() {}
