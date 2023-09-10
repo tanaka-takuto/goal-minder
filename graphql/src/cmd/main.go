@@ -1,11 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"log"
-	"os"
 
 	gmGraphql "github.com/tanaka-takuto/goal-minder/adapter/graphql"
 	"github.com/tanaka-takuto/goal-minder/adapter/graphql/resolver"
+	"github.com/tanaka-takuto/goal-minder/config"
 	"github.com/tanaka-takuto/goal-minder/infra/db"
 	"github.com/tanaka-takuto/goal-minder/infra/echo/middleware"
 
@@ -15,14 +16,8 @@ import (
 	echoMiddleware "github.com/labstack/echo/middleware"
 )
 
-const defaultPort = "3000"
-
 func main() {
-
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = defaultPort
-	}
+	port := config.Port()
 
 	e := echo.New()
 	e.Use(echoMiddleware.Recover())
@@ -41,7 +36,7 @@ func main() {
 	})
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
-	err := e.Start(":" + port)
+	err := e.Start(fmt.Sprintf(":%v", port))
 	if err != nil {
 		log.Fatal(err)
 	}

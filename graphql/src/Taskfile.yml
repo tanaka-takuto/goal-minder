@@ -9,7 +9,7 @@ vars:
 tasks:
   default:
     cmds:
-      - echo "{{.GREETING}}"
+      - task --list-all
     silent: true
 
   dbDryRun:
@@ -22,5 +22,5 @@ tasks:
 
   dbExport:
     cmds:
-      - '{{.MYSQLDEF}} --export > infra/db/schema/mysqldef/ddl.sql'
+      - '{{.MYSQLDEF}} --export | sed "s/AUTO_INCREMENT=[0-9]* //g" > infra/db/schema/mysqldef/ddl.sql'
 

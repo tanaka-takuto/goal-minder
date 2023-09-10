@@ -5,15 +5,16 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/tanaka-takuto/goal-minder/config"
 )
-
-const secreatKey = "secsec"
 
 // AuthToken 認証トークン
 type AuthToken string
 
 // Decode 認証トークンをデコードする
 func (at AuthToken) Decode() (*AuthTokenClaims, error) {
+	secreatKey := config.SecretKey()
+
 	token, err := jwt.ParseWithClaims(string(at), &AuthTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if method, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -43,6 +44,8 @@ type AuthTokenClaims struct {
 
 // Encode 認証トークンクレームをエンコードする
 func (atc AuthTokenClaims) Encode() AuthToken {
+	secreatKey := config.SecretKey()
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, atc)
 	tokenJwt, err := token.SignedString([]byte(secreatKey))
 	if err != nil {

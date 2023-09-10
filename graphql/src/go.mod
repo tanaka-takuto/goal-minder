@@ -25,6 +25,7 @@ require (
 
 require (
 	github.com/agnivade/levenshtein v1.1.1 // indirect
+	github.com/caarlos0/env v3.5.0+incompatible
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/golang-jwt/jwt v3.2.2+incompatible

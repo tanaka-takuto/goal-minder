@@ -22,6 +22,10 @@ services:
       - ../graphql/src:/go/src
     working_dir: /go/src
     tty: true
+    environment:
+      - ENV=local
+      - PORT=3000
+      - SECRET_KEY=secret
     ports:
       - 3000:3000
     # command: sh -c 'go mod download && air'
