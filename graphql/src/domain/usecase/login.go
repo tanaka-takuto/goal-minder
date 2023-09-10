@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/tanaka-takuto/goal-minder/adapter/repository"
-	"github.com/tanaka-takuto/goal-minder/domain/model"
-	applicationerror "github.com/tanaka-takuto/goal-minder/domain/usecase/application_error"
+	"goal-minder/adapter/repository"
+	"goal-minder/domain/model"
+	applicationerror "goal-minder/domain/usecase/application_error"
 )
 
 type LoginInput struct {

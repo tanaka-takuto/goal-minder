@@ -7,12 +7,12 @@ package resolver
 import (
 	"context"
 
-	graphql_model "github.com/tanaka-takuto/goal-minder/adapter/graphql/model"
-	"github.com/tanaka-takuto/goal-minder/adapter/graphql/vo"
-	modelContext "github.com/tanaka-takuto/goal-minder/domain/context"
-	"github.com/tanaka-takuto/goal-minder/domain/model"
-	"github.com/tanaka-takuto/goal-minder/domain/usecase"
-	"github.com/tanaka-takuto/goal-minder/infra/db"
+	graphql_model "goal-minder/adapter/graphql/model"
+	"goal-minder/adapter/graphql/vo"
+	modelContext "goal-minder/domain/context"
+	"goal-minder/domain/model"
+	"goal-minder/domain/usecase"
+	"goal-minder/infra/db"
 )
 
 // Login is the resolver for the login field.

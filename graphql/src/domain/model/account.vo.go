@@ -1,10 +1,12 @@
 package model
 
+import "fmt"
+
 // AccountID アカウントID
 type AccountID int
 
 func (id AccountID) String() string {
-	return string(id)
+	return fmt.Sprintf("%d", id)
 }
 
 // AccountName 名前

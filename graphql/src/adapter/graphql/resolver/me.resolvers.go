@@ -8,9 +8,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/tanaka-takuto/goal-minder/adapter/graphql"
-	graphql_model "github.com/tanaka-takuto/goal-minder/adapter/graphql/model"
-	modelContext "github.com/tanaka-takuto/goal-minder/domain/context"
+	"goal-minder/adapter/graphql"
+	graphql_model "goal-minder/adapter/graphql/model"
+	modelContext "goal-minder/domain/context"
 )
 
 // Me is the resolver for the me field.

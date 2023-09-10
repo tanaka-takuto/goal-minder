@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"log"
 
-	gmGraphql "github.com/tanaka-takuto/goal-minder/adapter/graphql"
-	"github.com/tanaka-takuto/goal-minder/adapter/graphql/resolver"
-	"github.com/tanaka-takuto/goal-minder/config"
-	"github.com/tanaka-takuto/goal-minder/infra/db"
-	"github.com/tanaka-takuto/goal-minder/infra/echo/middleware"
+	gmGraphql "goal-minder/adapter/graphql"
+	"goal-minder/adapter/graphql/resolver"
+	"goal-minder/config"
+	"goal-minder/infra/db"
+	"goal-minder/infra/echo/middleware"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
@@ -35,7 +35,7 @@ func main() {
 		return nil
 	})
 
-	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
+	log.Printf("connect to http://localhost:%v/ for GraphQL playground", port)
 	err := e.Start(fmt.Sprintf(":%v", port))
 	if err != nil {
 		log.Fatal(err)

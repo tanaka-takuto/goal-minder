@@ -1,4 +1,4 @@
-module github.com/tanaka-takuto/goal-minder
+module goal-minder
 
 go 1.21.0
 

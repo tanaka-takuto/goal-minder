@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"time"
 
+	"goal-minder/config"
+
 	"github.com/golang-jwt/jwt"
-	"github.com/tanaka-takuto/goal-minder/config"
 )
 
 // AuthToken 認証トークン

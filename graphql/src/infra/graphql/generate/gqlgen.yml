@@ -16,7 +16,7 @@ resolver:
   filename_template: "{name}.resolvers.go"
 
 # autobind:
-#   - "github.com/tanaka-takuto/goal-minder/domain/usecase/application_error"
+#   - "goal-minder/domain/usecase/application_error"
 
 models:
   ID:

@@ -3,7 +3,7 @@ package model
 import (
 	"time"
 
-	"github.com/tanaka-takuto/goal-minder/domain/vo"
+	"goal-minder/domain/vo"
 )
 
 // LoginPassword ログインパスワード

@@ -7,7 +7,7 @@ package resolver
 import (
 	"context"
 
-	modelContext "github.com/tanaka-takuto/goal-minder/domain/context"
+	modelContext "goal-minder/domain/context"
 )
 
 // Logout is the resolver for the logout field.

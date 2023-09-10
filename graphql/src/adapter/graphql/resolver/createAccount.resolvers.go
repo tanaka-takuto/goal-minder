@@ -7,12 +7,12 @@ package resolver
 import (
 	"context"
 
-	graphql1 "github.com/tanaka-takuto/goal-minder/adapter/graphql"
-	graphql_model "github.com/tanaka-takuto/goal-minder/adapter/graphql/model"
-	"github.com/tanaka-takuto/goal-minder/adapter/graphql/vo"
-	"github.com/tanaka-takuto/goal-minder/domain/model"
-	"github.com/tanaka-takuto/goal-minder/domain/usecase"
-	"github.com/tanaka-takuto/goal-minder/infra/db"
+	graphql1 "goal-minder/adapter/graphql"
+	graphql_model "goal-minder/adapter/graphql/model"
+	"goal-minder/adapter/graphql/vo"
+	"goal-minder/domain/model"
+	"goal-minder/domain/usecase"
+	"goal-minder/infra/db"
 )
 
 // CreateAccount is the resolver for the createAccount field.

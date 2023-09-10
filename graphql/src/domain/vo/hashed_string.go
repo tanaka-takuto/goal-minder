@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/tanaka-takuto/goal-minder/sdk"
+	"goal-minder/sdk"
 )
 
 // HashedString ハッシュ化された文字列

@@ -3,7 +3,7 @@ package context
 import (
 	"context"
 
-	"github.com/tanaka-takuto/goal-minder/domain/model"
+	"goal-minder/domain/model"
 )
 
 type accountID struct{}

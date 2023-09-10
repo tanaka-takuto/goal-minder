@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/tanaka-takuto/goal-minder/domain/model"
+	"goal-minder/domain/model"
 )
 
 type authorizationHelperID struct{}

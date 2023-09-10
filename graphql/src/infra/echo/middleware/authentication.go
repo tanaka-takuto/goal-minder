@@ -3,9 +3,10 @@ package middleware
 import (
 	"strings"
 
+	"goal-minder/domain/context"
+	"goal-minder/domain/model"
+
 	"github.com/labstack/echo"
-	"github.com/tanaka-takuto/goal-minder/domain/context"
-	"github.com/tanaka-takuto/goal-minder/domain/model"
 )
 
 // Authentication 認証を行う

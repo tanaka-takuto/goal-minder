@@ -1,9 +1,10 @@
 package middleware
 
 import (
+	modelContext "goal-minder/domain/context"
+
 	"github.com/google/uuid"
 	"github.com/labstack/echo"
-	modelContext "github.com/tanaka-takuto/goal-minder/domain/context"
 )
 
 // SetRequestID リクエストIDを設定する
