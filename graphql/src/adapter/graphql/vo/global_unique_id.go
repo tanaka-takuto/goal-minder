@@ -3,6 +3,7 @@ package vo
 import (
 	"encoding/base64"
 	"fmt"
+	"goal-minder/config"
 	"strconv"
 	"strings"
 )
@@ -20,7 +21,7 @@ const (
 
 // newGlobalUniqueID ユニークIDを作成する
 func newGlobalUniqueID(key string, id int) GlobalUniqueID {
-	base64ID := base64.StdEncoding.EncodeToString([]byte(strings.Join([]string{applicationName, key, fmt.Sprint(id)}, separator)))
+	base64ID := base64.StdEncoding.EncodeToString([]byte(strings.Join([]string{applicationName, config.Version(), key, fmt.Sprint(id)}, separator)))
 	return GlobalUniqueID(base64ID)
 }
 
@@ -32,15 +33,14 @@ func (guID GlobalUniqueID) decodeByKey(key string) (id *int, err error) {
 	}
 
 	separeteUniqID := strings.Split(string(decodedIDBytes), separator)
-	if len(separeteUniqID) != 3 {
+	if len(separeteUniqID) != 4 {
 		return nil, fmt.Errorf("invalid GlobalUniqueID")
 	}
 
-	decodedApplicationName, decodedKey, decodedIDStr := separeteUniqID[0], separeteUniqID[1], separeteUniqID[2]
-	if decodedApplicationName != applicationName {
-		return nil, fmt.Errorf("invalid GlobalUniqueID")
-	}
-	if decodedKey != key {
+	decodedApplicationName, decodedVersion, decodedKey, decodedIDStr := separeteUniqID[0], separeteUniqID[1], separeteUniqID[2], separeteUniqID[3]
+	if decodedApplicationName != applicationName ||
+		decodedVersion != config.Version() ||
+		decodedKey != key {
 		return nil, fmt.Errorf("invalid GlobalUniqueID")
 	}
 

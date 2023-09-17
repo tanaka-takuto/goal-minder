@@ -4,6 +4,11 @@ import (
 	"github.com/caarlos0/env"
 )
 
+const (
+	// version バージョン
+	version = "0.0.1"
+)
+
 // config 設定
 type config struct {
 	Port      int    `env:"PORT" envDefault:"3000"`
@@ -29,4 +34,9 @@ func Port() int {
 // SecretKey 秘密鍵
 func SecretKey() string {
 	return cfg.SecretKey
+}
+
+// Version バージョン
+func Version() string {
+	return version
 }
