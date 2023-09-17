@@ -7,13 +7,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	graphql_model "goal-minder/adapter/graphql/model"
 	"strconv"
 	"sync"
 	"sync/atomic"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
-	graphql_model "goal-minder/adapter/graphql/model"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -41,6 +41,7 @@ type ResolverRoot interface {
 }
 
 type DirectiveRoot struct {
+	Authorization func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
 }
 
 type ComplexityRoot struct {
@@ -303,6 +304,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
+	{Name: "../../infra/graphql/schema/directive/authorization.graphql", Input: `directive @authorization on FIELD_DEFINITION`, BuiltIn: false},
 	{Name: "../../infra/graphql/schema/error/applicationError.graphql", Input: `"""
 アプリケーションエラー
 """
@@ -450,7 +452,10 @@ union LoginPayload = LoginSuccess | IncorrectEmailOrPasswordError
 }
 `, BuiltIn: false},
 	{Name: "../../infra/graphql/schema/query/me.graphql", Input: `extend type Query {
-  me: Account
+  """
+  ログインアカウント
+  """
+  me: Account! @authorization
 }
 `, BuiltIn: false},
 }
@@ -466,7 +471,7 @@ func (ec *executionContext) field_Mutation_createAccount_args(ctx context.Contex
 	var arg0 *graphql_model.CreateAccountInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOCreateAccountInput2ᚖgithubᚗcomᚋtanakaᚑtakutoᚋgoalᚑminderᚋadapterᚋgraphqlᚋmodelᚐCreateAccountInput(ctx, tmp)
+		arg0, err = ec.unmarshalOCreateAccountInput2ᚖgoalᚑminderᚋadapterᚋgraphqlᚋmodelᚐCreateAccountInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -481,7 +486,7 @@ func (ec *executionContext) field_Mutation_login_args(ctx context.Context, rawAr
 	var arg0 *graphql_model.LoginInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOLoginInput2ᚖgithubᚗcomᚋtanakaᚑtakutoᚋgoalᚑminderᚋadapterᚋgraphqlᚋmodelᚐLoginInput(ctx, tmp)
+		arg0, err = ec.unmarshalOLoginInput2ᚖgoalᚑminderᚋadapterᚋgraphqlᚋmodelᚐLoginInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -791,7 +796,7 @@ func (ec *executionContext) _LoginSuccess_account(ctx context.Context, field gra
 	}
 	res := resTmp.(*graphql_model.Account)
 	fc.Result = res
-	return ec.marshalNAccount2ᚖgithubᚗcomᚋtanakaᚑtakutoᚋgoalᚑminderᚋadapterᚋgraphqlᚋmodelᚐAccount(ctx, field.Selections, res)
+	return ec.marshalNAccount2ᚖgoalᚑminderᚋadapterᚋgraphqlᚋmodelᚐAccount(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_LoginSuccess_account(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -931,7 +936,7 @@ func (ec *executionContext) _Mutation_createAccount(ctx context.Context, field g
 	}
 	res := resTmp.(graphql_model.CreateAccountPayload)
 	fc.Result = res
-	return ec.marshalNCreateAccountPayload2githubᚗcomᚋtanakaᚑtakutoᚋgoalᚑminderᚋadapterᚋgraphqlᚋmodelᚐCreateAccountPayload(ctx, field.Selections, res)
+	return ec.marshalNCreateAccountPayload2goalᚑminderᚋadapterᚋgraphqlᚋmodelᚐCreateAccountPayload(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_createAccount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -986,7 +991,7 @@ func (ec *executionContext) _Mutation_login(ctx context.Context, field graphql.C
 	}
 	res := resTmp.(graphql_model.LoginPayload)
 	fc.Result = res
-	return ec.marshalNLoginPayload2githubᚗcomᚋtanakaᚑtakutoᚋgoalᚑminderᚋadapterᚋgraphqlᚋmodelᚐLoginPayload(ctx, field.Selections, res)
+	return ec.marshalNLoginPayload2goalᚑminderᚋadapterᚋgraphqlᚋmodelᚐLoginPayload(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_login(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1070,19 +1075,42 @@ func (ec *executionContext) _Query_me(ctx context.Context, field graphql.Collect
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Me(rctx)
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Me(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.Authorization == nil {
+				return nil, errors.New("directive authorization is not implemented")
+			}
+			return ec.directives.Authorization(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*graphql_model.Account); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *goal-minder/adapter/graphql/model.Account`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.(*graphql_model.Account)
 	fc.Result = res
-	return ec.marshalOAccount2ᚖgithubᚗcomᚋtanakaᚑtakutoᚋgoalᚑminderᚋadapterᚋgraphqlᚋmodelᚐAccount(ctx, field.Selections, res)
+	return ec.marshalNAccount2ᚖgoalᚑminderᚋadapterᚋgraphqlᚋmodelᚐAccount(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_me(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3472,6 +3500,9 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_me(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
 				return res
 			}
 
@@ -3838,7 +3869,11 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNAccount2ᚖgithubᚗcomᚋtanakaᚑtakutoᚋgoalᚑminderᚋadapterᚋgraphqlᚋmodelᚐAccount(ctx context.Context, sel ast.SelectionSet, v *graphql_model.Account) graphql.Marshaler {
+func (ec *executionContext) marshalNAccount2goalᚑminderᚋadapterᚋgraphqlᚋmodelᚐAccount(ctx context.Context, sel ast.SelectionSet, v graphql_model.Account) graphql.Marshaler {
+	return ec._Account(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNAccount2ᚖgoalᚑminderᚋadapterᚋgraphqlᚋmodelᚐAccount(ctx context.Context, sel ast.SelectionSet, v *graphql_model.Account) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -3863,7 +3898,7 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalNCreateAccountPayload2githubᚗcomᚋtanakaᚑtakutoᚋgoalᚑminderᚋadapterᚋgraphqlᚋmodelᚐCreateAccountPayload(ctx context.Context, sel ast.SelectionSet, v graphql_model.CreateAccountPayload) graphql.Marshaler {
+func (ec *executionContext) marshalNCreateAccountPayload2goalᚑminderᚋadapterᚋgraphqlᚋmodelᚐCreateAccountPayload(ctx context.Context, sel ast.SelectionSet, v graphql_model.CreateAccountPayload) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -3888,7 +3923,7 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 	return res
 }
 
-func (ec *executionContext) marshalNLoginPayload2githubᚗcomᚋtanakaᚑtakutoᚋgoalᚑminderᚋadapterᚋgraphqlᚋmodelᚐLoginPayload(ctx context.Context, sel ast.SelectionSet, v graphql_model.LoginPayload) graphql.Marshaler {
+func (ec *executionContext) marshalNLoginPayload2goalᚑminderᚋadapterᚋgraphqlᚋmodelᚐLoginPayload(ctx context.Context, sel ast.SelectionSet, v graphql_model.LoginPayload) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -4166,13 +4201,6 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
-func (ec *executionContext) marshalOAccount2ᚖgithubᚗcomᚋtanakaᚑtakutoᚋgoalᚑminderᚋadapterᚋgraphqlᚋmodelᚐAccount(ctx context.Context, sel ast.SelectionSet, v *graphql_model.Account) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._Account(ctx, sel, v)
-}
-
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -4199,7 +4227,7 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) unmarshalOCreateAccountInput2ᚖgithubᚗcomᚋtanakaᚑtakutoᚋgoalᚑminderᚋadapterᚋgraphqlᚋmodelᚐCreateAccountInput(ctx context.Context, v interface{}) (*graphql_model.CreateAccountInput, error) {
+func (ec *executionContext) unmarshalOCreateAccountInput2ᚖgoalᚑminderᚋadapterᚋgraphqlᚋmodelᚐCreateAccountInput(ctx context.Context, v interface{}) (*graphql_model.CreateAccountInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -4207,7 +4235,7 @@ func (ec *executionContext) unmarshalOCreateAccountInput2ᚖgithubᚗcomᚋtanak
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOLoginInput2ᚖgithubᚗcomᚋtanakaᚑtakutoᚋgoalᚑminderᚋadapterᚋgraphqlᚋmodelᚐLoginInput(ctx context.Context, v interface{}) (*graphql_model.LoginInput, error) {
+func (ec *executionContext) unmarshalOLoginInput2ᚖgoalᚑminderᚋadapterᚋgraphqlᚋmodelᚐLoginInput(ctx context.Context, v interface{}) (*graphql_model.LoginInput, error) {
 	if v == nil {
 		return nil, nil
 	}

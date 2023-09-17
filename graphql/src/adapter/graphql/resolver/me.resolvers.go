@@ -6,8 +6,7 @@ package resolver
 
 import (
 	"context"
-
-	"goal-minder/adapter/graphql"
+	graphql1 "goal-minder/adapter/graphql"
 	graphql_model "goal-minder/adapter/graphql/model"
 	"goal-minder/adapter/graphql/vo"
 	"goal-minder/cmd/di"
@@ -27,10 +26,9 @@ func (r *queryResolver) Me(ctx context.Context) (*graphql_model.Account, error) 
 		Name:  string(account.Name),
 		Email: string(account.Email),
 	}, nil
-
 }
 
 // Query returns graphql1.QueryResolver implementation.
-func (r *Resolver) Query() graphql.QueryResolver { return &queryResolver{r} }
+func (r *Resolver) Query() graphql1.QueryResolver { return &queryResolver{r} }
 
 type queryResolver struct{ *Resolver }

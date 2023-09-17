@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-
 	graphql1 "goal-minder/adapter/graphql"
 	graphql_model "goal-minder/adapter/graphql/model"
 	"goal-minder/adapter/graphql/vo"

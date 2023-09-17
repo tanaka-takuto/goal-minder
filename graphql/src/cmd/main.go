@@ -5,6 +5,7 @@ import (
 	"log"
 
 	gmGraphql "goal-minder/adapter/graphql"
+	"goal-minder/adapter/graphql/directive"
 	"goal-minder/adapter/graphql/resolver"
 	"goal-minder/config"
 	"goal-minder/infra/echo/middleware"
@@ -27,7 +28,12 @@ func main() {
 		return nil
 	})
 	e.POST("/query", func(c echo.Context) error {
-		srv := handler.NewDefaultServer(gmGraphql.NewExecutableSchema(gmGraphql.Config{Resolvers: &resolver.Resolver{}}))
+		srv := handler.NewDefaultServer(gmGraphql.NewExecutableSchema(gmGraphql.Config{
+			Resolvers: &resolver.Resolver{},
+			Directives: gmGraphql.DirectiveRoot{
+				Authorization: directive.AuthorizationDirective,
+			},
+		}))
 		srv.ServeHTTP(c.Response(), c.Request())
 		return nil
 	})

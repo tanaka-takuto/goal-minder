@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-
 	modelContext "goal-minder/domain/context"
 )
 

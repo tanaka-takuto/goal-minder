@@ -1,0 +1,1 @@
+directive @authorization on FIELD_DEFINITION
