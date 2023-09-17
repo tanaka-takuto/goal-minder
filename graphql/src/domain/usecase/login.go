@@ -4,24 +4,26 @@ import (
 	"context"
 	"database/sql"
 
-	"goal-minder/adapter/repository"
 	"goal-minder/domain/model"
 	applicationerror "goal-minder/domain/usecase/application_error"
 )
+
+type LoginUsecase struct {
+	model.AccountPasswordRepository
+}
 
 type LoginInput struct {
 	Email    model.AccountEmail
 	Password string
 }
 
-func Login(ctx context.Context, db *sql.DB, input LoginInput) (*model.Account, *applicationerror.IncorrectEmailOrPasswordError, error) {
+func (u LoginUsecase) Execute(ctx context.Context, db *sql.DB, input LoginInput) (*model.Account, *applicationerror.IncorrectEmailOrPasswordError, error) {
 	var accountPassword *model.AccountPassword
 	var incorrectEmailOrPasswordError *applicationerror.IncorrectEmailOrPasswordError
 
-	err := repository.Transaction(ctx, db, func(ctx context.Context, tx *sql.Tx) error {
+	err := Transaction(ctx, db, func(ctx context.Context, tx model.ContextExecutor) error {
 		// メールアドレスからアカウントを取得
-		accountPasswordRepo := repository.NewAccountPasswordRepository(tx)
-		ap, err := accountPasswordRepo.FindByEmail(ctx, input.Email)
+		ap, err := u.AccountPasswordRepository.FindByEmail(ctx, tx, input.Email)
 		if err != nil {
 			return err
 		}
@@ -33,7 +35,7 @@ func Login(ctx context.Context, db *sql.DB, input LoginInput) (*model.Account, *
 			return incorrectEmailOrPasswordError
 		}
 
-		if _, err := accountPasswordRepo.Save(ctx, *accountPassword); err != nil {
+		if _, err := u.AccountPasswordRepository.Save(ctx, tx, *accountPassword); err != nil {
 			return err
 		}
 

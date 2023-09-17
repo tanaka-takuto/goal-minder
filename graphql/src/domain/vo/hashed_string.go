@@ -54,4 +54,5 @@ func (hs HashedString) ValidString(plainStr string) error {
 	}
 
 	return nil
+
 }

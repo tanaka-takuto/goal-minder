@@ -4,10 +4,14 @@ import (
 	"context"
 	"database/sql"
 
-	"goal-minder/adapter/repository"
 	"goal-minder/domain/model"
 	applicationerror "goal-minder/domain/usecase/application_error"
 )
+
+type CreateAccountUsecase struct {
+	model.AccountRepository
+	model.AccountPasswordRepository
+}
 
 type CreateAccountInput struct {
 	Name     model.AccountName
@@ -15,14 +19,13 @@ type CreateAccountInput struct {
 	Password model.LoginPassword
 }
 
-func CreateAccount(ctx context.Context, db *sql.DB, input CreateAccountInput) (*model.Account, *applicationerror.EmailAlreadyExistsError, error) {
+func (u CreateAccountUsecase) Execute(ctx context.Context, db *sql.DB, input CreateAccountInput) (*model.Account, *applicationerror.EmailAlreadyExistsError, error) {
 	var account *model.Account
 	var emailAlreadyExistsError *applicationerror.EmailAlreadyExistsError
-	err := repository.Transaction(ctx, db, func(ctx context.Context, tx *sql.Tx) error {
-		accountRepo := repository.NewAccountRepository(tx)
+	err := Transaction(ctx, db, func(ctx context.Context, tx model.ContextExecutor) error {
 
 		// メールアドレスの存在チェック
-		if exists, err := accountRepo.ExistsAccountByEmail(ctx, input.Email); err != nil {
+		if exists, err := u.AccountRepository.ExistsAccountByEmail(ctx, tx, input.Email); err != nil {
 			return err
 		} else if exists {
 			emailAlreadyExistsError = &applicationerror.EmailAlreadyExistsErrorInstanse
@@ -31,7 +34,7 @@ func CreateAccount(ctx context.Context, db *sql.DB, input CreateAccountInput) (*
 
 		// アカウントを作成
 		newAccount := model.NewAccount(input.Name, input.Email)
-		a, err := accountRepo.Create(ctx, newAccount)
+		a, err := u.AccountRepository.Create(ctx, tx, newAccount)
 		if err != nil {
 			return err
 		}
@@ -39,7 +42,7 @@ func CreateAccount(ctx context.Context, db *sql.DB, input CreateAccountInput) (*
 
 		// ログイン情報の保存
 		accountPassword := model.NewAccountPassword(account.ID, input.Password)
-		if _, err := repository.NewAccountPasswordRepository(tx).Save(ctx, accountPassword); err != nil {
+		if _, err := u.AccountPasswordRepository.Save(ctx, tx, accountPassword); err != nil {
 			return err
 		}
 

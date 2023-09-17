@@ -22,8 +22,8 @@ func TestGlobalUniqueID_DecodeByKey(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			uID := NewGlobalUniqueID(tt.setKey, tt.id)
-			id, err := uID.DecodeByKey(tt.getKey)
+			uID := newGlobalUniqueID(tt.setKey, tt.id)
+			id, err := uID.decodeByKey(tt.getKey)
 
 			if tt.hasError {
 				assert.Error(t, err)

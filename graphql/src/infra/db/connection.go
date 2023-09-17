@@ -6,10 +6,7 @@ import (
 	"github.com/go-sql-driver/mysql"
 )
 
-var Con *sql.DB
-
 func init() {
-
 	// TODO: 環境変数から取得する
 	config := mysql.Config{
 		User:                 "root",
@@ -28,3 +25,5 @@ func init() {
 
 	Con = con
 }
+
+var Con *sql.DB

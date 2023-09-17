@@ -1,12 +1,12 @@
-package repository
+package usecase
 
 import (
 	"context"
-	"database/sql"
+	"goal-minder/domain/model"
 )
 
 // Transaction トランザクションを実行する
-func Transaction(ctx context.Context, db *sql.DB, txExec func(context.Context, *sql.Tx) error) error {
+func Transaction(ctx context.Context, db model.Beginner, txExec func(context.Context, model.ContextExecutor) error) error {
 	tx, err := db.Begin()
 	if err != nil {
 		return err

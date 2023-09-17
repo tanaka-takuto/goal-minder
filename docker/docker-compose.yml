@@ -19,8 +19,8 @@ services:
       context: ./image/graphql
       dockerfile: Dockerfile
     volumes:
-      - ../graphql/src:/go/src
-    working_dir: /go/src
+      - ../graphql/src:/go/src/goal-minder
+    working_dir: /go/src/goal-minder
     tty: true
     environment:
       - ENV=local

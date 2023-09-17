@@ -6,22 +6,28 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 
 	"goal-minder/adapter/graphql"
 	graphql_model "goal-minder/adapter/graphql/model"
+	"goal-minder/adapter/graphql/vo"
+	"goal-minder/cmd/di"
 	modelContext "goal-minder/domain/context"
+	"goal-minder/domain/usecase"
+	"goal-minder/infra/db"
 )
 
 // Me is the resolver for the me field.
 func (r *queryResolver) Me(ctx context.Context) (*graphql_model.Account, error) {
-	accountID := modelContext.GetAccountID(ctx)
-	fmt.Println(*accountID)
+	account, err := di.MeUsecase().Execute(ctx, db.Con, usecase.MeInput{AccountID: *modelContext.GetAccountID(ctx)})
+	if err != nil {
+		return nil, err
+	}
 	return &graphql_model.Account{
-		ID:    "1",
-		Name:  "tanaka",
-		Email: "",
+		ID:    vo.NewAccountID(account.ID).String(),
+		Name:  string(account.Name),
+		Email: string(account.Email),
 	}, nil
+
 }
 
 // Query returns graphql1.QueryResolver implementation.

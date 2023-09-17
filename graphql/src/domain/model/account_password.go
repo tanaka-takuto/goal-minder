@@ -2,29 +2,14 @@ package model
 
 import (
 	"time"
-
-	"goal-minder/domain/vo"
 )
-
-// LoginPassword ログインパスワード
-type LoginPassword vo.HashedString
-
-// NewLoginPassword ログインパスワードを作成する
-func NewLoginPassword(plainStr string) LoginPassword {
-	return LoginPassword(vo.NewHashedString(plainStr))
-}
-
-// ValidString 文字列が正しいかどうかを確認する
-func (p LoginPassword) ValidString(plainStr string) error {
-	return vo.HashedString(p).ValidString(plainStr)
-}
 
 // AccountPassword アカウントパスワード
 type AccountPassword struct {
 	AccountID  AccountID     // アカウントID
 	Password   LoginPassword // ログインパスワード
 	SetAt      time.Time     // 設定日時
-	LoggedInAt time.Time     // 設定日時
+	LoggedInAt time.Time     // ログイン日時
 }
 
 // NewAccountPassword アカウントログインを作成する

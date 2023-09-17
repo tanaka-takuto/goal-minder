@@ -10,6 +10,7 @@ import (
 	graphql1 "goal-minder/adapter/graphql"
 	graphql_model "goal-minder/adapter/graphql/model"
 	"goal-minder/adapter/graphql/vo"
+	"goal-minder/cmd/di"
 	"goal-minder/domain/model"
 	"goal-minder/domain/usecase"
 	"goal-minder/infra/db"
@@ -23,7 +24,7 @@ func (r *mutationResolver) CreateAccount(ctx context.Context, input *graphql_mod
 		Password: model.NewLoginPassword(input.Password),
 	}
 
-	account, emailAlreadyExistsErr, err := usecase.CreateAccount(ctx, db.Con, usecase.CreateAccountInput(uInput))
+	account, emailAlreadyExistsErr, err := di.CreateAccountUsecase().Execute(ctx, db.Con, usecase.CreateAccountInput(uInput))
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +33,7 @@ func (r *mutationResolver) CreateAccount(ctx context.Context, input *graphql_mod
 	}
 
 	return &graphql_model.Account{
-		ID:    vo.NewGlobalUniqueID("accountID", int(account.ID)).String(),
+		ID:    vo.NewAccountID(account.ID).String(),
 		Name:  string(account.Name),
 		Email: string(account.Email),
 	}, nil

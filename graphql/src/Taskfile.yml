@@ -3,7 +3,6 @@
 version: '3'
 
 vars:
-  GREETING: Hello, World!
   MYSQLDEF: mysqldef -uroot -ppassword -hGM-db -P3306 GM --config=infra/db/schema/mysqldef/mysqldef.yml --file=infra/db/schema/mysqldef/ddl.sql
 
 tasks:
@@ -23,4 +22,8 @@ tasks:
   dbExport:
     cmds:
       - '{{.MYSQLDEF}} --export | sed "s/AUTO_INCREMENT=[0-9]* //g" > infra/db/schema/mysqldef/ddl.sql'
+
+  lint:
+    cmds:
+      - go-arch-lint check
 

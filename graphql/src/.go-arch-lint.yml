@@ -1,0 +1,57 @@
+version: 3
+
+workdir: .
+
+allow:
+  depOnAnyVendor: true
+
+excludeFiles:
+  - "^.vscode\/.*$"
+  - "^tmp\/.*$"
+  - "tools\.go"
+
+components:
+  # SDK
+  di:                 { in: cmd/di/** }
+  sdk:                { in: sdk/** }
+  config:             { in: config/** }
+  # Entity
+  model:              { in: [domain/context/**, domain/model/**, domain/vo/**] }
+  # Usecase
+  usecase:            { in: domain/usecase/** }
+  # Interface Adapter
+  adapter:            { in: adapter/** }
+  # Framework & Driver
+  infra:              { in: infra/** }
+  cmd:                { in: cmd }
+
+commonComponents:
+  - di
+  - sdk
+  - config
+  - model
+
+deps:
+  # SDK
+  di:
+    mayDependOn:
+      - adapter
+      - usecase
+  # Entity
+  # model:
+  # Usecase
+  usecase:
+    mayDependOn:
+      - usecase
+  # Interface Adapter
+  adapter:
+    mayDependOn:
+      - adapter
+      - usecase
+      - infra # 本当はよくないかも
+  # Framework & Driver
+  # infra:
+  cmd:
+    mayDependOn:
+      - adapter
+      - infra

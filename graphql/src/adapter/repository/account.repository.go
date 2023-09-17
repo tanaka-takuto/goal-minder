@@ -9,25 +9,24 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/boil"
 )
 
-type AccountRepository struct {
-	db boil.ContextExecutor
+type accountRepository struct{}
+
+func NewAccountRepository() model.AccountRepository {
+	return &accountRepository{}
 }
 
-func NewAccountRepository(db boil.ContextExecutor) *AccountRepository {
-	return &AccountRepository{db: db}
-}
-
-// Create アカウントを作成する
-func (r *AccountRepository) Create(ctx context.Context, account model.Account) (*model.Account, error) {
+// Create implements model.AccountRepository.
+func (*accountRepository) Create(ctx context.Context, con model.ContextExecutor, account model.Account) (*model.Account, error) {
 	var dAccount models.Account
 	dAccount.Name = string(account.Name)
 	dAccount.Email = string(account.Email)
 
-	err := dAccount.Insert(ctx, r.db, boil.Infer())
+	err := dAccount.Insert(ctx, con, boil.Infer())
 	if err != nil {
 		return nil, err
 	}
 
+	// TODO: mapper作りたい
 	return &model.Account{
 		ID:    model.AccountID(dAccount.ID),
 		Name:  model.AccountName(dAccount.Name),
@@ -35,9 +34,27 @@ func (r *AccountRepository) Create(ctx context.Context, account model.Account) (
 	}, nil
 }
 
-// ExistsAccountByEmail メールアドレスが存在するかどうかを確認する
-func (r *AccountRepository) ExistsAccountByEmail(ctx context.Context, email model.AccountEmail) (bool, error) {
+// ExistsAccountByEmail implements model.AccountRepository.
+func (*accountRepository) ExistsAccountByEmail(ctx context.Context, con model.ContextExecutor, email model.AccountEmail) (bool, error) {
 	return models.Accounts(
 		models.AccountWhere.Email.EQ(string(email)),
-	).Exists(ctx, r.db)
+	).Exists(ctx, con)
+}
+
+// FindByAccountID implements model.AccountRepository.
+func (*accountRepository) FindByAccountID(ctx context.Context, con model.ContextExecutor, accountID model.AccountID) (*model.Account, error) {
+	dAccount, err := models.Accounts(
+		models.AccountWhere.ID.EQ(int64(accountID)),
+	).One(ctx, con)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: mapper作りたい
+	return &model.Account{
+		ID:    model.AccountID(dAccount.ID),
+		Name:  model.AccountName(dAccount.Name),
+		Email: model.AccountEmail(dAccount.Email),
+	}, nil
 }

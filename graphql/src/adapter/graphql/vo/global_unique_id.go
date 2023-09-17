@@ -18,14 +18,14 @@ const (
 	separator = ":"
 )
 
-// NewGlobalUniqueID ユニークIDを作成する
-func NewGlobalUniqueID(key string, id int) GlobalUniqueID {
+// newGlobalUniqueID ユニークIDを作成する
+func newGlobalUniqueID(key string, id int) GlobalUniqueID {
 	base64ID := base64.StdEncoding.EncodeToString([]byte(strings.Join([]string{applicationName, key, fmt.Sprint(id)}, separator)))
 	return GlobalUniqueID(base64ID)
 }
 
-// DecodeByKey キーでIDを取得する
-func (guID GlobalUniqueID) DecodeByKey(key string) (id *int, err error) {
+// decodeByKey キーでIDを取得する
+func (guID GlobalUniqueID) decodeByKey(key string) (id *int, err error) {
 	decodedIDBytes, err := base64.StdEncoding.DecodeString(string(guID))
 	if err != nil {
 		return nil, err

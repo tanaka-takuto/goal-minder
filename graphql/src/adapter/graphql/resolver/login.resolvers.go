@@ -9,6 +9,7 @@ import (
 
 	graphql_model "goal-minder/adapter/graphql/model"
 	"goal-minder/adapter/graphql/vo"
+	"goal-minder/cmd/di"
 	modelContext "goal-minder/domain/context"
 	"goal-minder/domain/model"
 	"goal-minder/domain/usecase"
@@ -22,7 +23,7 @@ func (r *mutationResolver) Login(ctx context.Context, input *graphql_model.Login
 		Password: input.Password,
 	}
 
-	account, incorrectEmailOrPasswordError, err := usecase.Login(ctx, db.Con, uInput)
+	account, incorrectEmailOrPasswordError, err := di.LoginUsecase().Execute(ctx, db.Con, uInput)
 	if err != nil {
 		return nil, err
 	} else if incorrectEmailOrPasswordError != nil {
@@ -36,7 +37,7 @@ func (r *mutationResolver) Login(ctx context.Context, input *graphql_model.Login
 
 	return graphql_model.LoginSuccess{
 		Account: &graphql_model.Account{
-			ID:    vo.NewGlobalUniqueID("accountID", int(account.ID)).String(),
+			ID:    vo.NewAccountID(account.ID).String(),
 			Name:  string(account.Name),
 			Email: string(account.Email),
 		},
