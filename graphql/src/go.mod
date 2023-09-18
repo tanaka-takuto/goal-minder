@@ -5,12 +5,14 @@ go 1.21.0
 require (
 	github.com/99designs/gqlgen v0.17.36
 	github.com/friendsofgo/errors v0.9.2
+	github.com/go-ozzo/ozzo-validation v3.6.0+incompatible
 	github.com/vektah/gqlparser/v2 v2.5.8
 	github.com/volatiletech/sqlboiler/v4 v4.15.0
 	github.com/volatiletech/strmangle v0.0.5
 )
 
 require (
+	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/google/subcommands v1.0.1 // indirect

@@ -6,6 +6,8 @@ import (
 
 	"goal-minder/domain/model"
 	applicationerror "goal-minder/domain/usecase/application_error"
+
+	validation "github.com/go-ozzo/ozzo-validation"
 )
 
 type CreateAccountUsecase struct {
@@ -16,7 +18,16 @@ type CreateAccountUsecase struct {
 type CreateAccountInput struct {
 	Name     model.AccountName
 	Email    model.AccountEmail
-	Password model.LoginPassword
+	Password model.RawLoginPassword
+}
+
+func (i CreateAccountInput) Validate() error {
+	err := validation.ValidateStruct(&i,
+		validation.Field(&i.Name),
+		validation.Field(&i.Email),
+		validation.Field(&i.Password),
+	)
+	return err
 }
 
 func (u CreateAccountUsecase) Execute(ctx context.Context, db *sql.DB, input CreateAccountInput) (*model.Account, *applicationerror.EmailAlreadyExistsError, error) {
@@ -41,7 +52,7 @@ func (u CreateAccountUsecase) Execute(ctx context.Context, db *sql.DB, input Cre
 		account = a
 
 		// ログイン情報の保存
-		accountPassword := model.NewAccountPassword(account.ID, input.Password)
+		accountPassword := model.NewAccountPassword(account.ID, model.NewLoginPassword(input.Password))
 		if _, err := u.AccountPasswordRepository.Save(ctx, tx, accountPassword); err != nil {
 			return err
 		}

@@ -1,0 +1,30 @@
+"""
+目標
+"""
+type Goal {
+  """
+  ID
+  """
+  id: ID!
+  
+  """
+  名前
+  """
+  name: String!
+  
+  """
+  詳細
+  """
+  detail: String!
+
+  """
+  規模
+  """
+  scale: Int
+
+  """
+  期限
+  """
+  deadline: Date
+}
+

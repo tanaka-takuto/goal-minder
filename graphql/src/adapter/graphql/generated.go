@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	graphql_model "goal-minder/adapter/graphql/model"
+	"goal-minder/adapter/graphql/scalar"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -55,6 +56,14 @@ type ComplexityRoot struct {
 		Message func(childComplexity int) int
 	}
 
+	Goal struct {
+		Deadline func(childComplexity int) int
+		Detail   func(childComplexity int) int
+		ID       func(childComplexity int) int
+		Name     func(childComplexity int) int
+		Scale    func(childComplexity int) int
+	}
+
 	IncorrectEmailOrPasswordError struct {
 		Message func(childComplexity int) int
 	}
@@ -72,10 +81,21 @@ type ComplexityRoot struct {
 		CreateAccount func(childComplexity int, input *graphql_model.CreateAccountInput) int
 		Login         func(childComplexity int, input *graphql_model.LoginInput) int
 		Logout        func(childComplexity int) int
+		SetGoal       func(childComplexity int, input *graphql_model.SetGoalInput) int
 	}
 
 	Query struct {
 		Me func(childComplexity int) int
+	}
+
+	ValidationError struct {
+		Details func(childComplexity int) int
+		Message func(childComplexity int) int
+	}
+
+	ValidationErrorDetail struct {
+		Field   func(childComplexity int) int
+		Message func(childComplexity int) int
 	}
 }
 
@@ -83,6 +103,7 @@ type MutationResolver interface {
 	CreateAccount(ctx context.Context, input *graphql_model.CreateAccountInput) (graphql_model.CreateAccountPayload, error)
 	Login(ctx context.Context, input *graphql_model.LoginInput) (graphql_model.LoginPayload, error)
 	Logout(ctx context.Context) (bool, error)
+	SetGoal(ctx context.Context, input *graphql_model.SetGoalInput) (graphql_model.SetGoaltPayload, error)
 }
 type QueryResolver interface {
 	Me(ctx context.Context) (*graphql_model.Account, error)
@@ -130,6 +151,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.EmailAlreadyExistsError.Message(childComplexity), true
+
+	case "Goal.deadline":
+		if e.complexity.Goal.Deadline == nil {
+			break
+		}
+
+		return e.complexity.Goal.Deadline(childComplexity), true
+
+	case "Goal.detail":
+		if e.complexity.Goal.Detail == nil {
+			break
+		}
+
+		return e.complexity.Goal.Detail(childComplexity), true
+
+	case "Goal.id":
+		if e.complexity.Goal.ID == nil {
+			break
+		}
+
+		return e.complexity.Goal.ID(childComplexity), true
+
+	case "Goal.name":
+		if e.complexity.Goal.Name == nil {
+			break
+		}
+
+		return e.complexity.Goal.Name(childComplexity), true
+
+	case "Goal.scale":
+		if e.complexity.Goal.Scale == nil {
+			break
+		}
+
+		return e.complexity.Goal.Scale(childComplexity), true
 
 	case "IncorrectEmailOrPasswordError.message":
 		if e.complexity.IncorrectEmailOrPasswordError.Message == nil {
@@ -190,12 +246,52 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.Logout(childComplexity), true
 
+	case "Mutation.setGoal":
+		if e.complexity.Mutation.SetGoal == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_setGoal_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SetGoal(childComplexity, args["input"].(*graphql_model.SetGoalInput)), true
+
 	case "Query.me":
 		if e.complexity.Query.Me == nil {
 			break
 		}
 
 		return e.complexity.Query.Me(childComplexity), true
+
+	case "ValidationError.details":
+		if e.complexity.ValidationError.Details == nil {
+			break
+		}
+
+		return e.complexity.ValidationError.Details(childComplexity), true
+
+	case "ValidationError.message":
+		if e.complexity.ValidationError.Message == nil {
+			break
+		}
+
+		return e.complexity.ValidationError.Message(childComplexity), true
+
+	case "ValidationErrorDetail.field":
+		if e.complexity.ValidationErrorDetail.Field == nil {
+			break
+		}
+
+		return e.complexity.ValidationErrorDetail.Field(childComplexity), true
+
+	case "ValidationErrorDetail.message":
+		if e.complexity.ValidationErrorDetail.Message == nil {
+			break
+		}
+
+		return e.complexity.ValidationErrorDetail.Message(childComplexity), true
 
 	}
 	return 0, false
@@ -207,6 +303,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputCreateAccountInput,
 		ec.unmarshalInputLoginInput,
+		ec.unmarshalInputSetGoalInput,
 	)
 	first := true
 
@@ -337,6 +434,37 @@ type IncorrectEmailOrPasswordError implements ApplicationError{
 }
 
 `, BuiltIn: false},
+	{Name: "../../infra/graphql/schema/error/validationError.graphql", Input: `"""
+バリデーションエラー
+"""
+type ValidationError implements ApplicationError{
+  """
+  エラーメッセージ
+  """
+  message: String!
+
+  """
+  バリデーションエラー詳細
+  """
+  details: [ValidationErrorDetail!]!
+}
+
+
+"""
+バリデーションエラー詳細
+"""
+type ValidationErrorDetail {
+  """
+  フィールド名
+  """
+  field: String!
+
+  """
+  エラーメッセージ
+  """
+  message: String!
+}
+`, BuiltIn: false},
 	{Name: "../../infra/graphql/schema/model/account.graphql", Input: `"""
 アカウント
 """
@@ -355,6 +483,37 @@ type Account {
   メールアドレス
   """
   email: String!
+}
+
+`, BuiltIn: false},
+	{Name: "../../infra/graphql/schema/model/goal.graphql", Input: `"""
+目標
+"""
+type Goal {
+  """
+  ID
+  """
+  id: ID!
+  
+  """
+  名前
+  """
+  name: String!
+  
+  """
+  詳細
+  """
+  detail: String!
+
+  """
+  規模
+  """
+  scale: Int
+
+  """
+  期限
+  """
+  deadline: Date
 }
 
 `, BuiltIn: false},
@@ -404,7 +563,7 @@ input CreateAccountInput {
 """
 アカウント作成ペイロード
 """
-union CreateAccountPayload = Account | EmailAlreadyExistsError
+union CreateAccountPayload = Account | ValidationError | EmailAlreadyExistsError
 `, BuiltIn: false},
 	{Name: "../../infra/graphql/schema/mutation/login.graphql", Input: `extend type Mutation {
   """
@@ -442,7 +601,7 @@ type LoginSuccess {
 """
 ログインペイロード
 """
-union LoginPayload = LoginSuccess | IncorrectEmailOrPasswordError
+union LoginPayload = LoginSuccess | ValidationError | IncorrectEmailOrPasswordError
 `, BuiltIn: false},
 	{Name: "../../infra/graphql/schema/mutation/logout.graphql", Input: `extend type Mutation {
   """
@@ -451,6 +610,38 @@ union LoginPayload = LoginSuccess | IncorrectEmailOrPasswordError
   logout: Boolean!
 }
 `, BuiltIn: false},
+	{Name: "../../infra/graphql/schema/mutation/setGoal.graphql", Input: `extend type Mutation {
+  """
+  目標を設定する
+  """
+  setGoal(input: SetGoalInput): SetGoaltPayload!
+}
+
+"""
+目標設定インプット
+"""
+input SetGoalInput {
+  """
+  名前
+  """
+  name: String!
+
+  """
+  メールアドレス
+  """
+  email:String!
+  
+  """
+  パスワード
+  """
+  password:String!
+}
+
+"""
+目標設定ペイロード
+"""
+union SetGoaltPayload = Goal | ValidationError | EmailAlreadyExistsError
+`, BuiltIn: false},
 	{Name: "../../infra/graphql/schema/query/me.graphql", Input: `extend type Query {
   """
   ログインアカウント
@@ -458,6 +649,7 @@ union LoginPayload = LoginSuccess | IncorrectEmailOrPasswordError
   me: Account! @authorization
 }
 `, BuiltIn: false},
+	{Name: "../../infra/graphql/schema/scalar/date.graphql", Input: `scalar Date`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
@@ -487,6 +679,21 @@ func (ec *executionContext) field_Mutation_login_args(ctx context.Context, rawAr
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalOLoginInput2ᚖgoalᚑminderᚋadapterᚋgraphqlᚋmodelᚐLoginInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_setGoal_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *graphql_model.SetGoalInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalOSetGoalInput2ᚖgoalᚑminderᚋadapterᚋgraphqlᚋmodelᚐSetGoalInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -719,6 +926,220 @@ func (ec *executionContext) fieldContext_EmailAlreadyExistsError_message(ctx con
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Goal_id(ctx context.Context, field graphql.CollectedField, obj *graphql_model.Goal) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Goal_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Goal_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Goal",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Goal_name(ctx context.Context, field graphql.CollectedField, obj *graphql_model.Goal) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Goal_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Goal_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Goal",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Goal_detail(ctx context.Context, field graphql.CollectedField, obj *graphql_model.Goal) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Goal_detail(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Detail, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Goal_detail(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Goal",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Goal_scale(ctx context.Context, field graphql.CollectedField, obj *graphql_model.Goal) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Goal_scale(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Scale, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Goal_scale(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Goal",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Goal_deadline(ctx context.Context, field graphql.CollectedField, obj *graphql_model.Goal) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Goal_deadline(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Deadline, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*scalar.Date)
+	fc.Result = res
+	return ec.marshalODate2ᚖgoalᚑminderᚋadapterᚋgraphqlᚋscalarᚐDate(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Goal_deadline(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Goal",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Date does not have child fields")
 		},
 	}
 	return fc, nil
@@ -1062,6 +1483,61 @@ func (ec *executionContext) fieldContext_Mutation_logout(ctx context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_setGoal(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_setGoal(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().SetGoal(rctx, fc.Args["input"].(*graphql_model.SetGoalInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(graphql_model.SetGoaltPayload)
+	fc.Result = res
+	return ec.marshalNSetGoaltPayload2goalᚑminderᚋadapterᚋgraphqlᚋmodelᚐSetGoaltPayload(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_setGoal(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type SetGoaltPayload does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_setGoal_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_me(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_me(ctx, field)
 	if err != nil {
@@ -1258,6 +1734,188 @@ func (ec *executionContext) fieldContext_Query___schema(ctx context.Context, fie
 				return ec.fieldContext___Schema_directives(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type __Schema", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ValidationError_message(ctx context.Context, field graphql.CollectedField, obj *graphql_model.ValidationError) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ValidationError_message(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Message, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ValidationError_message(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ValidationError",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ValidationError_details(ctx context.Context, field graphql.CollectedField, obj *graphql_model.ValidationError) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ValidationError_details(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Details, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*graphql_model.ValidationErrorDetail)
+	fc.Result = res
+	return ec.marshalNValidationErrorDetail2ᚕᚖgoalᚑminderᚋadapterᚋgraphqlᚋmodelᚐValidationErrorDetailᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ValidationError_details(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ValidationError",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "field":
+				return ec.fieldContext_ValidationErrorDetail_field(ctx, field)
+			case "message":
+				return ec.fieldContext_ValidationErrorDetail_message(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ValidationErrorDetail", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ValidationErrorDetail_field(ctx context.Context, field graphql.CollectedField, obj *graphql_model.ValidationErrorDetail) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ValidationErrorDetail_field(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Field, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ValidationErrorDetail_field(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ValidationErrorDetail",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ValidationErrorDetail_message(ctx context.Context, field graphql.CollectedField, obj *graphql_model.ValidationErrorDetail) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ValidationErrorDetail_message(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Message, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ValidationErrorDetail_message(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ValidationErrorDetail",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3121,6 +3779,53 @@ func (ec *executionContext) unmarshalInputLoginInput(ctx context.Context, obj in
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputSetGoalInput(ctx context.Context, obj interface{}) (graphql_model.SetGoalInput, error) {
+	var it graphql_model.SetGoalInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name", "email", "password"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "email":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Email = data
+		case "password":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Password = data
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -3143,6 +3848,13 @@ func (ec *executionContext) _ApplicationError(ctx context.Context, sel ast.Selec
 			return graphql.Null
 		}
 		return ec._IncorrectEmailOrPasswordError(ctx, sel, obj)
+	case graphql_model.ValidationError:
+		return ec._ValidationError(ctx, sel, &obj)
+	case *graphql_model.ValidationError:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._ValidationError(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -3159,6 +3871,13 @@ func (ec *executionContext) _CreateAccountPayload(ctx context.Context, sel ast.S
 			return graphql.Null
 		}
 		return ec._Account(ctx, sel, obj)
+	case graphql_model.ValidationError:
+		return ec._ValidationError(ctx, sel, &obj)
+	case *graphql_model.ValidationError:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._ValidationError(ctx, sel, obj)
 	case graphql_model.EmailAlreadyExistsError:
 		return ec._EmailAlreadyExistsError(ctx, sel, &obj)
 	case *graphql_model.EmailAlreadyExistsError:
@@ -3182,6 +3901,13 @@ func (ec *executionContext) _LoginPayload(ctx context.Context, sel ast.Selection
 			return graphql.Null
 		}
 		return ec._LoginSuccess(ctx, sel, obj)
+	case graphql_model.ValidationError:
+		return ec._ValidationError(ctx, sel, &obj)
+	case *graphql_model.ValidationError:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._ValidationError(ctx, sel, obj)
 	case graphql_model.IncorrectEmailOrPasswordError:
 		return ec._IncorrectEmailOrPasswordError(ctx, sel, &obj)
 	case *graphql_model.IncorrectEmailOrPasswordError:
@@ -3189,6 +3915,36 @@ func (ec *executionContext) _LoginPayload(ctx context.Context, sel ast.Selection
 			return graphql.Null
 		}
 		return ec._IncorrectEmailOrPasswordError(ctx, sel, obj)
+	default:
+		panic(fmt.Errorf("unexpected type %T", obj))
+	}
+}
+
+func (ec *executionContext) _SetGoaltPayload(ctx context.Context, sel ast.SelectionSet, obj graphql_model.SetGoaltPayload) graphql.Marshaler {
+	switch obj := (obj).(type) {
+	case nil:
+		return graphql.Null
+	case graphql_model.Goal:
+		return ec._Goal(ctx, sel, &obj)
+	case *graphql_model.Goal:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Goal(ctx, sel, obj)
+	case graphql_model.ValidationError:
+		return ec._ValidationError(ctx, sel, &obj)
+	case *graphql_model.ValidationError:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._ValidationError(ctx, sel, obj)
+	case graphql_model.EmailAlreadyExistsError:
+		return ec._EmailAlreadyExistsError(ctx, sel, &obj)
+	case *graphql_model.EmailAlreadyExistsError:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._EmailAlreadyExistsError(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -3247,7 +4003,7 @@ func (ec *executionContext) _Account(ctx context.Context, sel ast.SelectionSet, 
 	return out
 }
 
-var emailAlreadyExistsErrorImplementors = []string{"EmailAlreadyExistsError", "ApplicationError", "CreateAccountPayload"}
+var emailAlreadyExistsErrorImplementors = []string{"EmailAlreadyExistsError", "ApplicationError", "CreateAccountPayload", "SetGoaltPayload"}
 
 func (ec *executionContext) _EmailAlreadyExistsError(ctx context.Context, sel ast.SelectionSet, obj *graphql_model.EmailAlreadyExistsError) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, emailAlreadyExistsErrorImplementors)
@@ -3263,6 +4019,59 @@ func (ec *executionContext) _EmailAlreadyExistsError(ctx context.Context, sel as
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var goalImplementors = []string{"Goal", "SetGoaltPayload"}
+
+func (ec *executionContext) _Goal(ctx context.Context, sel ast.SelectionSet, obj *graphql_model.Goal) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, goalImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Goal")
+		case "id":
+			out.Values[i] = ec._Goal_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._Goal_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "detail":
+			out.Values[i] = ec._Goal_detail(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "scale":
+			out.Values[i] = ec._Goal_scale(ctx, field, obj)
+		case "deadline":
+			out.Values[i] = ec._Goal_deadline(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3448,6 +4257,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "setGoal":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_setGoal(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3520,6 +4336,94 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___schema(ctx, field)
 			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var validationErrorImplementors = []string{"ValidationError", "ApplicationError", "CreateAccountPayload", "LoginPayload", "SetGoaltPayload"}
+
+func (ec *executionContext) _ValidationError(ctx context.Context, sel ast.SelectionSet, obj *graphql_model.ValidationError) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, validationErrorImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ValidationError")
+		case "message":
+			out.Values[i] = ec._ValidationError_message(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "details":
+			out.Values[i] = ec._ValidationError_details(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var validationErrorDetailImplementors = []string{"ValidationErrorDetail"}
+
+func (ec *executionContext) _ValidationErrorDetail(ctx context.Context, sel ast.SelectionSet, obj *graphql_model.ValidationErrorDetail) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, validationErrorDetailImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ValidationErrorDetail")
+		case "field":
+			out.Values[i] = ec._ValidationErrorDetail_field(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "message":
+			out.Values[i] = ec._ValidationErrorDetail_message(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3933,6 +4837,16 @@ func (ec *executionContext) marshalNLoginPayload2goalᚑminderᚋadapterᚋgraph
 	return ec._LoginPayload(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNSetGoaltPayload2goalᚑminderᚋadapterᚋgraphqlᚋmodelᚐSetGoaltPayload(ctx context.Context, sel ast.SelectionSet, v graphql_model.SetGoaltPayload) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._SetGoaltPayload(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -3946,6 +4860,60 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNValidationErrorDetail2ᚕᚖgoalᚑminderᚋadapterᚋgraphqlᚋmodelᚐValidationErrorDetailᚄ(ctx context.Context, sel ast.SelectionSet, v []*graphql_model.ValidationErrorDetail) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNValidationErrorDetail2ᚖgoalᚑminderᚋadapterᚋgraphqlᚋmodelᚐValidationErrorDetail(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNValidationErrorDetail2ᚖgoalᚑminderᚋadapterᚋgraphqlᚋmodelᚐValidationErrorDetail(ctx context.Context, sel ast.SelectionSet, v *graphql_model.ValidationErrorDetail) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ValidationErrorDetail(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
@@ -4235,11 +5203,51 @@ func (ec *executionContext) unmarshalOCreateAccountInput2ᚖgoalᚑminderᚋadap
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalODate2ᚖgoalᚑminderᚋadapterᚋgraphqlᚋscalarᚐDate(ctx context.Context, v interface{}) (*scalar.Date, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(scalar.Date)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalODate2ᚖgoalᚑminderᚋadapterᚋgraphqlᚋscalarᚐDate(ctx context.Context, sel ast.SelectionSet, v *scalar.Date) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalInt(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.SelectionSet, v *int) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalInt(*v)
+	return res
+}
+
 func (ec *executionContext) unmarshalOLoginInput2ᚖgoalᚑminderᚋadapterᚋgraphqlᚋmodelᚐLoginInput(ctx context.Context, v interface{}) (*graphql_model.LoginInput, error) {
 	if v == nil {
 		return nil, nil
 	}
 	res, err := ec.unmarshalInputLoginInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOSetGoalInput2ᚖgoalᚑminderᚋadapterᚋgraphqlᚋmodelᚐSetGoalInput(ctx context.Context, v interface{}) (*graphql_model.SetGoalInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputSetGoalInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 

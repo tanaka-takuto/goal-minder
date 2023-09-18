@@ -2,6 +2,10 @@
 
 package graphql_model
 
+import (
+	"goal-minder/adapter/graphql/scalar"
+)
+
 // アプリケーションエラー
 type ApplicationError interface {
 	IsApplicationError()
@@ -17,6 +21,11 @@ type CreateAccountPayload interface {
 // ログインペイロード
 type LoginPayload interface {
 	IsLoginPayload()
+}
+
+// 目標設定ペイロード
+type SetGoaltPayload interface {
+	IsSetGoaltPayload()
 }
 
 // アカウント
@@ -54,6 +63,24 @@ func (this EmailAlreadyExistsError) GetMessage() string { return this.Message }
 
 func (EmailAlreadyExistsError) IsCreateAccountPayload() {}
 
+func (EmailAlreadyExistsError) IsSetGoaltPayload() {}
+
+// 目標
+type Goal struct {
+	// ID
+	ID string `json:"id"`
+	// 名前
+	Name string `json:"name"`
+	// 詳細
+	Detail string `json:"detail"`
+	// 規模
+	Scale *int `json:"scale,omitempty"`
+	// 期限
+	Deadline *scalar.Date `json:"deadline,omitempty"`
+}
+
+func (Goal) IsSetGoaltPayload() {}
+
 // メールアドレスまたはパスワードが間違っています
 type IncorrectEmailOrPasswordError struct {
 	// エラーメッセージ
@@ -89,4 +116,41 @@ type Me struct {
 	ID string `json:"id"`
 	// トークン
 	Token string `json:"token"`
+}
+
+// 目標設定インプット
+type SetGoalInput struct {
+	// 名前
+	Name string `json:"name"`
+	// メールアドレス
+	Email string `json:"email"`
+	// パスワード
+	Password string `json:"password"`
+}
+
+// バリデーションエラー
+type ValidationError struct {
+	// エラーメッセージ
+	Message string `json:"message"`
+	// バリデーションエラー詳細
+	Details []*ValidationErrorDetail `json:"details"`
+}
+
+func (ValidationError) IsApplicationError() {}
+
+// エラーメッセージ
+func (this ValidationError) GetMessage() string { return this.Message }
+
+func (ValidationError) IsCreateAccountPayload() {}
+
+func (ValidationError) IsLoginPayload() {}
+
+func (ValidationError) IsSetGoaltPayload() {}
+
+// バリデーションエラー詳細
+type ValidationErrorDetail struct {
+	// フィールド名
+	Field string `json:"field"`
+	// エラーメッセージ
+	Message string `json:"message"`
 }

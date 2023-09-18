@@ -28,4 +28,4 @@ input CreateAccountInput {
 """
 アカウント作成ペイロード
 """
-union CreateAccountPayload = Account | EmailAlreadyExistsError
+union CreateAccountPayload = Account | ValidationError | EmailAlreadyExistsError

@@ -1,0 +1,30 @@
+"""
+バリデーションエラー
+"""
+type ValidationError implements ApplicationError{
+  """
+  エラーメッセージ
+  """
+  message: String!
+
+  """
+  バリデーションエラー詳細
+  """
+  details: [ValidationErrorDetail!]!
+}
+
+
+"""
+バリデーションエラー詳細
+"""
+type ValidationErrorDetail {
+  """
+  フィールド名
+  """
+  field: String!
+
+  """
+  エラーメッセージ
+  """
+  message: String!
+}

@@ -10,6 +10,7 @@ import (
 	graphql_model "goal-minder/adapter/graphql/model"
 	"goal-minder/adapter/graphql/vo"
 	"goal-minder/cmd/di"
+	modelContext "goal-minder/domain/context"
 	"goal-minder/domain/model"
 	"goal-minder/domain/usecase"
 	"goal-minder/infra/db"
@@ -20,7 +21,10 @@ func (r *mutationResolver) CreateAccount(ctx context.Context, input *graphql_mod
 	uInput := usecase.CreateAccountInput{
 		Name:     model.AccountName(input.Name),
 		Email:    model.AccountEmail(input.Email),
-		Password: model.NewLoginPassword(input.Password),
+		Password: model.RawLoginPassword(input.Password),
+	}
+	if ve := uInput.Validate(); ve != nil {
+		return graphql_model.NewValidationError(ve), nil
 	}
 
 	account, emailAlreadyExistsErr, err := di.CreateAccountUsecase().Execute(ctx, db.Con, usecase.CreateAccountInput(uInput))
@@ -30,6 +34,11 @@ func (r *mutationResolver) CreateAccount(ctx context.Context, input *graphql_mod
 	if emailAlreadyExistsErr != nil {
 		return graphql_model.EmailAlreadyExistsError{Message: emailAlreadyExistsErr.Error()}, nil
 	}
+
+	// Cookieに認証トークンを設定
+	authTokenClaims := model.NewAuthTokenClaims(account.ID)
+	authToken := authTokenClaims.Encode()
+	modelContext.GetAuthorizationHelper(ctx).SetAuthorizationIntoCookie(authToken)
 
 	return &graphql_model.Account{
 		ID:    vo.NewAccountID(account.ID).String(),

@@ -34,4 +34,4 @@ type LoginSuccess {
 """
 ログインペイロード
 """
-union LoginPayload = LoginSuccess | IncorrectEmailOrPasswordError
+union LoginPayload = LoginSuccess | ValidationError | IncorrectEmailOrPasswordError

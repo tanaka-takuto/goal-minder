@@ -1,0 +1,31 @@
+extend type Mutation {
+  """
+  目標を設定する
+  """
+  setGoal(input: SetGoalInput): SetGoaltPayload!
+}
+
+"""
+目標設定インプット
+"""
+input SetGoalInput {
+  """
+  名前
+  """
+  name: String!
+
+  """
+  メールアドレス
+  """
+  email:String!
+  
+  """
+  パスワード
+  """
+  password:String!
+}
+
+"""
+目標設定ペイロード
+"""
+union SetGoaltPayload = Goal | ValidationError | EmailAlreadyExistsError
