@@ -5,8 +5,11 @@ type IncorrectEmailOrPasswordError struct {
 	ApplicationError
 }
 
-var IncorrectEmailOrPasswordErrorInstanse = IncorrectEmailOrPasswordError{
-	ApplicationError{
-		message: "メールアドレスまたはパスワードが間違っています",
-	},
+// NewIncorrectEmailOrPasswordError メールアドレスまたはパスワードが間違っていますを生成する
+func NewIncorrectEmailOrPasswordError() IncorrectEmailOrPasswordError {
+	return IncorrectEmailOrPasswordError{
+		ApplicationError{
+			message: "メールアドレスまたはパスワードが間違っています",
+		},
+	}
 }

@@ -11,15 +11,26 @@ import (
 type RawLoginPassword string
 
 const (
-	minRawLoginPasswordLength = 8
-	maxRawLoginPasswordLength = 20
+	minLengthRawLoginPassword = 8
+	maxLengthRawLoginPassword = 20
 )
 
-func (p RawLoginPassword) Validate() error {
+// validate 文字列が正しいかどうかを確認する
+func (p RawLoginPassword) validate() error {
 	return validation.Validate(string(p),
 		validation.Required.Error("パスワードは必須です"),
-		validation.Length(8, 20).Error(fmt.Sprintf("パスワードは%d文字以上%d文字以下です", minRawLoginPasswordLength, maxRawLoginPasswordLength)),
+		validation.Length(8, 20).Error(fmt.Sprintf("パスワードは%d文字以上%d文字以下です", minLengthRawLoginPassword, maxLengthRawLoginPassword)),
 	)
+}
+
+// NewRawLoginPassword 生ログインパスワードを作成する
+func NewRawLoginPassword(str string) (*RawLoginPassword, error) {
+	p := RawLoginPassword(str)
+	if err := p.validate(); err != nil {
+		return nil, err
+	}
+
+	return &p, nil
 }
 
 // LoginPassword ログインパスワード
@@ -31,6 +42,6 @@ func NewLoginPassword(rawLoginPassword RawLoginPassword) LoginPassword {
 }
 
 // ValidString 文字列が正しいかどうかを確認する
-func (p LoginPassword) ValidString(plainStr string) error {
-	return vo.HashedString(p).ValidString(plainStr)
+func (p LoginPassword) ValidString(rawLoginPassword RawLoginPassword) error {
+	return vo.HashedString(p).ValidString(string(rawLoginPassword))
 }

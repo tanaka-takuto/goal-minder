@@ -6,8 +6,7 @@ import (
 
 	"goal-minder/domain/model"
 	applicationerror "goal-minder/domain/usecase/application_error"
-
-	validation "github.com/go-ozzo/ozzo-validation"
+	"goal-minder/sdk"
 )
 
 type CreateAccountUsecase struct {
@@ -15,36 +14,56 @@ type CreateAccountUsecase struct {
 	model.AccountPasswordRepository
 }
 
-type CreateAccountInput struct {
-	Name     model.AccountName
-	Email    model.AccountEmail
-	Password model.RawLoginPassword
+type createAccountInput struct {
+	name     model.AccountName
+	email    model.AccountEmail
+	password model.RawLoginPassword
 }
 
-func (i CreateAccountInput) Validate() error {
-	err := validation.ValidateStruct(&i,
-		validation.Field(&i.Name),
-		validation.Field(&i.Email),
-		validation.Field(&i.Password),
-	)
-	return err
+func NewCreateAccountInput(name string, email string, password string) (*createAccountInput, *applicationerror.ValidationError) {
+	validationError := applicationerror.NewValidationError()
+
+	n, err := model.NewAccountName(name)
+	if err != nil {
+		validationError.Add("name", err.Error())
+	}
+
+	e, err := model.NewAccountEmail(email)
+	if err != nil {
+		validationError.Add("email", err.Error())
+	}
+
+	p, err := model.NewRawLoginPassword(password)
+	if err != nil {
+		validationError.Add("password", err.Error())
+	}
+
+	if validationError.HasError() {
+		return nil, &validationError
+	}
+
+	return &createAccountInput{
+		name:     *n,
+		email:    *e,
+		password: *p,
+	}, nil
 }
 
-func (u CreateAccountUsecase) Execute(ctx context.Context, db *sql.DB, input CreateAccountInput) (*model.Account, *applicationerror.EmailAlreadyExistsError, error) {
+func (u CreateAccountUsecase) Execute(ctx context.Context, db *sql.DB, input createAccountInput) (*model.Account, *applicationerror.EmailAlreadyExistsError, error) {
 	var account *model.Account
 	var emailAlreadyExistsError *applicationerror.EmailAlreadyExistsError
 	err := Transaction(ctx, db, func(ctx context.Context, tx model.ContextExecutor) error {
 
 		// メールアドレスの存在チェック
-		if exists, err := u.AccountRepository.ExistsAccountByEmail(ctx, tx, input.Email); err != nil {
+		if exists, err := u.AccountRepository.ExistsAccountByEmail(ctx, tx, input.email); err != nil {
 			return err
 		} else if exists {
-			emailAlreadyExistsError = &applicationerror.EmailAlreadyExistsErrorInstanse
-			return emailAlreadyExistsError
+			emailAlreadyExistsError = sdk.Ptr(applicationerror.NewEmailAlreadyExistsError())
+			return nil
 		}
 
 		// アカウントを作成
-		newAccount := model.NewAccount(input.Name, input.Email)
+		newAccount := model.NewAccount(input.name, input.email)
 		a, err := u.AccountRepository.Create(ctx, tx, newAccount)
 		if err != nil {
 			return err
@@ -52,7 +71,7 @@ func (u CreateAccountUsecase) Execute(ctx context.Context, db *sql.DB, input Cre
 		account = a
 
 		// ログイン情報の保存
-		accountPassword := model.NewAccountPassword(account.ID, model.NewLoginPassword(input.Password))
+		accountPassword := model.NewAccountPassword(account.ID, model.NewLoginPassword(input.password))
 		if _, err := u.AccountPasswordRepository.Save(ctx, tx, accountPassword); err != nil {
 			return err
 		}

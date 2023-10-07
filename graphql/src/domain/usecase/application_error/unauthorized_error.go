@@ -5,8 +5,11 @@ type UnauthorizedError struct {
 	ApplicationError
 }
 
-var UnauthorizedErrorInstanse = UnauthorizedError{
-	ApplicationError{
-		message: "認証されていません",
-	},
+// NewUnauthorizedError 認証されていませんを生成する
+func NewUnauthorizedError() UnauthorizedError {
+	return UnauthorizedError{
+		ApplicationError{
+			message: "認証されていません",
+		},
+	}
 }

@@ -1,15 +1,14 @@
 package graphql_model
 
-import "encoding/json"
+import (
+	"goal-minder/domain/usecase/application_error"
+)
 
 // NewValidationError バリデーションエラーを作成する
-func NewValidationError(err error) ValidationError {
-	ve := ValidationError{Message: "バリデーションエラー"}
+func NewValidationError(err application_error.ValidationError) ValidationError {
+	ve := ValidationError{Message: err.Error()}
 
-	validationErrStr, _ := json.Marshal(err)
-	var validationDetailMap map[string]string
-	json.Unmarshal(validationErrStr, &validationDetailMap)
-	for k, v := range validationDetailMap {
+	for k, v := range err.Details {
 		ve.Details = append(ve.Details, &ValidationErrorDetail{
 			Field:   k,
 			Message: v,

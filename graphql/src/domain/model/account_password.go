@@ -24,8 +24,8 @@ func NewAccountPassword(accountID AccountID, password LoginPassword) AccountPass
 }
 
 // Login ログインする
-func (a *AccountPassword) Login(plainStr string) error {
-	if err := a.Password.ValidString(plainStr); err != nil {
+func (a *AccountPassword) Login(rawLoginPassword RawLoginPassword) error {
+	if err := a.Password.ValidString(rawLoginPassword); err != nil {
 		return err
 	}
 

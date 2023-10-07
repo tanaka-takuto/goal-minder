@@ -13,16 +13,21 @@ input SetGoalInput {
   名前
   """
   name: String!
-
-  """
-  メールアドレス
-  """
-  email:String!
   
   """
-  パスワード
+  詳細
   """
-  password:String!
+  detail: String!
+
+  """
+  規模
+  """
+  scale: Int
+
+  """
+  期限
+  """
+  deadline: Date
 }
 
 """

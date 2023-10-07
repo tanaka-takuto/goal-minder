@@ -122,10 +122,12 @@ type Me struct {
 type SetGoalInput struct {
 	// 名前
 	Name string `json:"name"`
-	// メールアドレス
-	Email string `json:"email"`
-	// パスワード
-	Password string `json:"password"`
+	// 詳細
+	Detail string `json:"detail"`
+	// 規模
+	Scale *int `json:"scale,omitempty"`
+	// 期限
+	Deadline *scalar.Date `json:"deadline,omitempty"`
 }
 
 // バリデーションエラー
@@ -152,5 +154,5 @@ type ValidationErrorDetail struct {
 	// フィールド名
 	Field string `json:"field"`
 	// エラーメッセージ
-	Message string `json:"message"`
+	Message []string `json:"message"`
 }

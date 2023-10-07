@@ -10,13 +10,23 @@ import (
 type AccountName string
 
 const (
-	minAccountNameLength = 10
-	maxAccountNameLength = 100
+	minLengthAccountName = 10
+	maxLengthAccountName = 100
 )
 
-func (n AccountName) Validate() error {
+// validate 名前のバリデーション
+func (n AccountName) validate() error {
 	return validation.Validate(string(n),
 		validation.Required.Error("名前は必須です"),
-		validation.Length(minAccountNameLength, maxAccountNameLength).Error(fmt.Sprintf("名前は%d文字以上%d文字以下です", minAccountNameLength, maxAccountNameLength)),
+		validation.Length(minLengthAccountName, maxLengthAccountName).Error(fmt.Sprintf("名前は%d文字以上%d文字以下です", minLengthAccountName, maxLengthAccountName)),
 	)
+}
+
+// NewAccountName 名前を生成
+func NewAccountName(name string) (*AccountName, error) {
+	n := AccountName(name)
+	if err := n.validate(); err != nil {
+		return nil, err
+	}
+	return &n, nil
 }
