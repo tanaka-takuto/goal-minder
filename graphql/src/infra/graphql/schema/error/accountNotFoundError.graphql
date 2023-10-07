@@ -1,0 +1,10 @@
+"""
+指定されたアカウントが見つかりませんでした
+"""
+type AccountNotFoundError implements ApplicationError{
+  """
+  エラーメッセージ
+  """
+  message: String!
+}
+

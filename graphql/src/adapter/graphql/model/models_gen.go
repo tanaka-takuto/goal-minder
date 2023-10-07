@@ -40,6 +40,19 @@ type Account struct {
 
 func (Account) IsCreateAccountPayload() {}
 
+// 指定されたアカウントが見つかりませんでした
+type AccountNotFoundError struct {
+	// エラーメッセージ
+	Message string `json:"message"`
+}
+
+func (AccountNotFoundError) IsApplicationError() {}
+
+// エラーメッセージ
+func (this AccountNotFoundError) GetMessage() string { return this.Message }
+
+func (AccountNotFoundError) IsSetGoaltPayload() {}
+
 // アカウント作成インプット
 type CreateAccountInput struct {
 	// 名前
@@ -62,8 +75,6 @@ func (EmailAlreadyExistsError) IsApplicationError() {}
 func (this EmailAlreadyExistsError) GetMessage() string { return this.Message }
 
 func (EmailAlreadyExistsError) IsCreateAccountPayload() {}
-
-func (EmailAlreadyExistsError) IsSetGoaltPayload() {}
 
 // 目標
 type Goal struct {

@@ -3,6 +3,7 @@ package scalar
 import (
 	"fmt"
 	"io"
+	"strconv"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -19,7 +20,7 @@ const dateFormat = "2006-01-02"
 
 // MarshalGQL implements Scalarable.
 func (d Date) MarshalGQL(w io.Writer) {
-	w.Write([]byte(time.Time(d).Format(dateFormat)))
+	io.WriteString(w, strconv.Quote(d.ToTime().Format(dateFormat)))
 }
 
 // UnmarshalGQL implements Scalarable.
@@ -37,4 +38,13 @@ func (d *Date) UnmarshalGQL(v interface{}) error {
 	*d = Date(date)
 
 	return nil
+}
+
+// ToTime time.Timeに変換する
+func (d *Date) ToTime() *time.Time {
+	if d == nil {
+		return nil
+	}
+	t := time.Time(*d)
+	return &t
 }

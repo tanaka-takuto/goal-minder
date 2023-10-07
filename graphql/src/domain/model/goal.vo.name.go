@@ -10,13 +10,21 @@ import (
 type GoalName string
 
 const (
-	minLengthGoalName = 10
-	maxLengthGoalName = 100
+	maxLengthGoalName = 100 // 目標名の最大長
 )
 
-func (n GoalName) Validate() error {
+func (n GoalName) validate() error {
 	return validation.Validate(string(n),
 		validation.Required.Error("目標名は必須です"),
-		validation.Length(minLengthGoalName, maxLengthGoalName).Error(fmt.Sprintf("目標名は%d文字以上%d文字以下です", minLengthGoalName, maxLengthGoalName)),
+		validation.Length(0, maxLengthGoalName).Error(fmt.Sprintf("目標名は%d文字以下です", maxLengthGoalName)),
 	)
+}
+
+// NewGoalName 目標名を生成する
+func NewGoalName(name string) (*GoalName, error) {
+	n := GoalName(name)
+	if err := n.validate(); err != nil {
+		return nil, err
+	}
+	return &n, nil
 }

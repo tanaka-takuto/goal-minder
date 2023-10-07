@@ -33,3 +33,11 @@ func MeUsecase() usecase.MeUsecase {
 	)
 	return usecase.MeUsecase{}
 }
+
+func SetGoalUsecase() usecase.SetGoalUsecase {
+	wire.Build(
+		repository.RepositorySet,
+		wire.Struct(new(usecase.SetGoalUsecase), "*"),
+	)
+	return usecase.SetGoalUsecase{}
+}

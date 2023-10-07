@@ -40,3 +40,13 @@ func MeUsecase() usecase.MeUsecase {
 	}
 	return meUsecase
 }
+
+func SetGoalUsecase() usecase.SetGoalUsecase {
+	accountRepository := repository.NewAccountRepository()
+	goalRepository := repository.NewGoalRepository()
+	setGoalUsecase := usecase.SetGoalUsecase{
+		AccountRepository: accountRepository,
+		GoalRepository:    goalRepository,
+	}
+	return setGoalUsecase
+}

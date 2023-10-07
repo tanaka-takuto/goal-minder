@@ -33,4 +33,4 @@ input SetGoalInput {
 """
 目標設定ペイロード
 """
-union SetGoaltPayload = Goal | ValidationError | EmailAlreadyExistsError
+union SetGoaltPayload = Goal | ValidationError | AccountNotFoundError

@@ -5,4 +5,5 @@ import "github.com/google/wire"
 var RepositorySet = wire.NewSet(
 	NewAccountPasswordRepository,
 	NewAccountRepository,
+	NewGoalRepository,
 )

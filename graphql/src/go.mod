@@ -7,6 +7,7 @@ require (
 	github.com/friendsofgo/errors v0.9.2
 	github.com/go-ozzo/ozzo-validation v3.6.0+incompatible
 	github.com/vektah/gqlparser/v2 v2.5.8
+	github.com/volatiletech/null/v8 v8.1.2
 	github.com/volatiletech/sqlboiler/v4 v4.15.0
 	github.com/volatiletech/strmangle v0.0.5
 )
@@ -15,6 +16,7 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
+	github.com/gofrs/uuid v4.2.0+incompatible // indirect
 	github.com/google/subcommands v1.0.1 // indirect
 	github.com/labstack/gommon v0.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
@@ -22,6 +24,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.1 // indirect
+	github.com/volatiletech/randomize v0.0.1 // indirect
 	golang.org/x/crypto v0.0.0-20220826181053-bd7e27e6170d // indirect
 	golang.org/x/net v0.10.0 // indirect
 )

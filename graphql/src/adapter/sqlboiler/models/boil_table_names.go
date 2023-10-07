@@ -6,7 +6,9 @@ package models
 var TableNames = struct {
 	Account         string
 	AccountPassword string
+	Goal            string
 }{
 	Account:         "account",
 	AccountPassword: "account_password",
+	Goal:            "goal",
 }

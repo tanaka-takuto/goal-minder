@@ -54,6 +54,10 @@ type ComplexityRoot struct {
 		Name  func(childComplexity int) int
 	}
 
+	AccountNotFoundError struct {
+		Message func(childComplexity int) int
+	}
+
 	EmailAlreadyExistsError struct {
 		Message func(childComplexity int) int
 	}
@@ -150,6 +154,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Account.Name(childComplexity), true
+
+	case "AccountNotFoundError.message":
+		if e.complexity.AccountNotFoundError.Message == nil {
+			break
+		}
+
+		return e.complexity.AccountNotFoundError.Message(childComplexity), true
 
 	case "EmailAlreadyExistsError.message":
 		if e.complexity.EmailAlreadyExistsError.Message == nil {
@@ -408,6 +419,17 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 
 var sources = []*ast.Source{
 	{Name: "../../infra/graphql/schema/directive/authorization.graphql", Input: `directive @authorization on FIELD_DEFINITION`, BuiltIn: false},
+	{Name: "../../infra/graphql/schema/error/accountNotFoundError.graphql", Input: `"""
+指定されたアカウントが見つかりませんでした
+"""
+type AccountNotFoundError implements ApplicationError{
+  """
+  エラーメッセージ
+  """
+  message: String!
+}
+
+`, BuiltIn: false},
 	{Name: "../../infra/graphql/schema/error/applicationError.graphql", Input: `"""
 アプリケーションエラー
 """
@@ -651,7 +673,7 @@ input SetGoalInput {
 """
 目標設定ペイロード
 """
-union SetGoaltPayload = Goal | ValidationError | EmailAlreadyExistsError
+union SetGoaltPayload = Goal | ValidationError | AccountNotFoundError
 `, BuiltIn: false},
 	{Name: "../../infra/graphql/schema/query/me.graphql", Input: `extend type Query {
   """
@@ -888,6 +910,50 @@ func (ec *executionContext) _Account_email(ctx context.Context, field graphql.Co
 func (ec *executionContext) fieldContext_Account_email(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Account",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AccountNotFoundError_message(ctx context.Context, field graphql.CollectedField, obj *graphql_model.AccountNotFoundError) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AccountNotFoundError_message(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Message, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AccountNotFoundError_message(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AccountNotFoundError",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -3854,6 +3920,13 @@ func (ec *executionContext) _ApplicationError(ctx context.Context, sel ast.Selec
 	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
+	case graphql_model.AccountNotFoundError:
+		return ec._AccountNotFoundError(ctx, sel, &obj)
+	case *graphql_model.AccountNotFoundError:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._AccountNotFoundError(ctx, sel, obj)
 	case graphql_model.EmailAlreadyExistsError:
 		return ec._EmailAlreadyExistsError(ctx, sel, &obj)
 	case *graphql_model.EmailAlreadyExistsError:
@@ -3958,13 +4031,13 @@ func (ec *executionContext) _SetGoaltPayload(ctx context.Context, sel ast.Select
 			return graphql.Null
 		}
 		return ec._ValidationError(ctx, sel, obj)
-	case graphql_model.EmailAlreadyExistsError:
-		return ec._EmailAlreadyExistsError(ctx, sel, &obj)
-	case *graphql_model.EmailAlreadyExistsError:
+	case graphql_model.AccountNotFoundError:
+		return ec._AccountNotFoundError(ctx, sel, &obj)
+	case *graphql_model.AccountNotFoundError:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._EmailAlreadyExistsError(ctx, sel, obj)
+		return ec._AccountNotFoundError(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -4023,7 +4096,46 @@ func (ec *executionContext) _Account(ctx context.Context, sel ast.SelectionSet, 
 	return out
 }
 
-var emailAlreadyExistsErrorImplementors = []string{"EmailAlreadyExistsError", "ApplicationError", "CreateAccountPayload", "SetGoaltPayload"}
+var accountNotFoundErrorImplementors = []string{"AccountNotFoundError", "ApplicationError", "SetGoaltPayload"}
+
+func (ec *executionContext) _AccountNotFoundError(ctx context.Context, sel ast.SelectionSet, obj *graphql_model.AccountNotFoundError) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, accountNotFoundErrorImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AccountNotFoundError")
+		case "message":
+			out.Values[i] = ec._AccountNotFoundError_message(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var emailAlreadyExistsErrorImplementors = []string{"EmailAlreadyExistsError", "ApplicationError", "CreateAccountPayload"}
 
 func (ec *executionContext) _EmailAlreadyExistsError(ctx context.Context, sel ast.SelectionSet, obj *graphql_model.EmailAlreadyExistsError) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, emailAlreadyExistsErrorImplementors)
