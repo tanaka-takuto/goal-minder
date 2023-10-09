@@ -25,17 +25,15 @@ func CreateAccountUsecase() usecase.CreateAccountUsecase {
 
 func LoginUsecase() usecase.LoginUsecase {
 	accountPasswordRepository := repository.NewAccountPasswordRepository()
-	accountRepository := repository.NewAccountRepository()
 	loginUsecase := usecase.LoginUsecase{
 		AccountPasswordRepository: accountPasswordRepository,
-		AccountRepository:         accountRepository,
 	}
 	return loginUsecase
 }
 
-func MeUsecase() usecase.MeUsecase {
+func AccountByIDUsecase() usecase.AccountByIDUsecase {
 	accountRepository := repository.NewAccountRepository()
-	meUsecase := usecase.MeUsecase{
+	meUsecase := usecase.AccountByIDUsecase{
 		AccountRepository: accountRepository,
 	}
 	return meUsecase

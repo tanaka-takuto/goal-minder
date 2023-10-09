@@ -25,9 +25,9 @@ input LoginInput {
 """
 type LoginSuccess {
   """
-  アカウント
+  自分自身
   """
-  account:Account!
+  me:Me!
 }
 
 

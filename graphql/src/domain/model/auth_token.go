@@ -7,6 +7,7 @@ import (
 	"goal-minder/config"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/google/uuid"
 )
 
 // AuthToken 認証トークン
@@ -40,6 +41,11 @@ func (at AuthToken) Decode() (*AuthTokenClaims, error) {
 // AuthTokenClaims 認証トークンクレーム
 type AuthTokenClaims struct {
 	jwt.StandardClaims
+	Payload AuthTokenPayload
+}
+
+// AuthTokenPayload 認証トークンペイロード
+type AuthTokenPayload struct {
 	AccountID AccountID
 }
 
@@ -58,17 +64,24 @@ func (atc AuthTokenClaims) Encode() AuthToken {
 
 // NewAuthTokenClaims 認証トークンクレームを作成する
 func NewAuthTokenClaims(accountID AccountID) AuthTokenClaims {
+	uuid, err := uuid.NewUUID()
+	if err != nil {
+		panic(err)
+	}
+
 	claims := AuthTokenClaims{
 		StandardClaims: jwt.StandardClaims{
-			Audience:  "asdf",
+			Audience:  "goal-minder",
 			ExpiresAt: time.Now().Add(24 * time.Hour).Unix(),
-			Id:        "asdf",
+			Id:        uuid.String(),
 			IssuedAt:  time.Now().Unix(),
-			Issuer:    "asdf",
+			Issuer:    "goal-minder",
 			NotBefore: time.Now().Unix(),
-			Subject:   "asdf",
+			Subject:   "AuthToken",
 		},
-		AccountID: accountID,
+		Payload: AuthTokenPayload{
+			AccountID: accountID,
+		},
 	}
 
 	return claims

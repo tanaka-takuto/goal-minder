@@ -22,7 +22,7 @@ func (r *mutationResolver) Login(ctx context.Context, input *graphql_model.Login
 		return graphql_model.NewValidationError(*vErr), nil
 	}
 
-	account, incorrectEmailOrPasswordError, err := di.LoginUsecase().Execute(ctx, db.Con, *uInput)
+	accountID, incorrectEmailOrPasswordError, err := di.LoginUsecase().Execute(ctx, db.Con, *uInput)
 	if err != nil {
 		return nil, err
 	} else if incorrectEmailOrPasswordError != nil {
@@ -30,15 +30,16 @@ func (r *mutationResolver) Login(ctx context.Context, input *graphql_model.Login
 	}
 
 	// Cookieに認証トークンを設定
-	authTokenClaims := model.NewAuthTokenClaims(account.ID)
+	authTokenClaims := model.NewAuthTokenClaims(*accountID)
 	authToken := authTokenClaims.Encode()
 	modelContext.GetAuthorizationHelper(ctx).SetAuthorizationIntoCookie(authToken)
 
 	return graphql_model.LoginSuccess{
-		Account: &graphql_model.Account{
-			ID:    vo.NewAccountID(account.ID).String(),
-			Name:  string(account.Name),
-			Email: string(account.Email),
+		Me: &graphql_model.Me{
+			Account: &graphql_model.Account{
+				// ログイン時はコンテキストからアカウントIDを取得できないためオブジェクトに詰める
+				ID: vo.NewAccountID(*accountID).String(),
+			},
 		},
 	}, nil
 }

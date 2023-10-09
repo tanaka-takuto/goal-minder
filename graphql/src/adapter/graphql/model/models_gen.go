@@ -115,18 +115,16 @@ type LoginInput struct {
 
 // ログイン成功
 type LoginSuccess struct {
-	// アカウント
-	Account *Account `json:"account"`
+	// 自分自身
+	Me *Me `json:"me"`
 }
 
 func (LoginSuccess) IsLoginPayload() {}
 
 // 自分自身
 type Me struct {
-	// ID
-	ID string `json:"id"`
-	// トークン
-	Token string `json:"token"`
+	// アカウント
+	Account *Account `json:"account"`
 }
 
 // 目標設定インプット

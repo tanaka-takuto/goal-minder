@@ -33,7 +33,7 @@ models:
     model:
       - goal-minder/adapter/graphql/scalar.Date
 
-  User:
+  Me:
     fields:
-      tudos:
+      account:
         resolver: true

@@ -26,7 +26,7 @@ func LoginUsecase() usecase.LoginUsecase {
 	return usecase.LoginUsecase{}
 }
 
-func MeUsecase() usecase.MeUsecase {
+func AccountByIDUsecase() usecase.MeUsecase {
 	wire.Build(
 		repository.RepositorySet,
 		wire.Struct(new(usecase.MeUsecase), "*"),

@@ -11,7 +11,6 @@ import (
 
 type LoginUsecase struct {
 	model.AccountPasswordRepository
-	model.AccountRepository
 }
 
 type LoginInput struct {
@@ -42,8 +41,8 @@ func NewLoginInput(email string, password string) (*LoginInput, *applicationerro
 	}, nil
 }
 
-func (u LoginUsecase) Execute(ctx context.Context, db *sql.DB, input LoginInput) (*model.Account, *applicationerror.IncorrectEmailOrPasswordError, error) {
-	var account *model.Account
+func (u LoginUsecase) Execute(ctx context.Context, db *sql.DB, input LoginInput) (*model.AccountID, *applicationerror.IncorrectEmailOrPasswordError, error) {
+	var accountID *model.AccountID
 	var incorrectEmailOrPasswordError *applicationerror.IncorrectEmailOrPasswordError
 
 	err := Transaction(ctx, db, func(ctx context.Context, tx model.ContextExecutor) error {
@@ -62,12 +61,7 @@ func (u LoginUsecase) Execute(ctx context.Context, db *sql.DB, input LoginInput)
 		if _, err := u.AccountPasswordRepository.Save(ctx, tx, *ap); err != nil {
 			return err
 		}
-
-		a, err := u.AccountRepository.FindByAccountID(ctx, tx, ap.AccountID)
-		if err != nil {
-			return err
-		}
-		account = a
+		accountID = &ap.AccountID
 
 		return nil
 	})
@@ -78,5 +72,5 @@ func (u LoginUsecase) Execute(ctx context.Context, db *sql.DB, input LoginInput)
 		return nil, incorrectEmailOrPasswordError, nil
 	}
 
-	return account, nil, nil
+	return accountID, nil, nil
 }

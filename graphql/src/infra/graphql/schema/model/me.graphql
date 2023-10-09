@@ -3,13 +3,8 @@
 """
 type Me {
   """
-  ID
+  アカウント
   """
-  id: ID!
-  
-  """
-  トークン
-  """
-  token: String!
+  account: Account!
 }
 
