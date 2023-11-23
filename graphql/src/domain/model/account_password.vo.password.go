@@ -1,8 +1,8 @@
 package model
 
 import (
-	"fmt"
 	"goal-minder/domain/vo"
+	"regexp"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 )
@@ -10,16 +10,11 @@ import (
 // RawLoginPassword 生ログインパスワード
 type RawLoginPassword string
 
-const (
-	minLengthRawLoginPassword = 8
-	maxLengthRawLoginPassword = 20
-)
-
 // validate 文字列が正しいかどうかを確認する
 func (p RawLoginPassword) validate() error {
 	return validation.Validate(string(p),
 		validation.Required.Error("パスワードは必須です"),
-		validation.Length(8, 20).Error(fmt.Sprintf("パスワードは%d文字以上%d文字以下です", minLengthRawLoginPassword, maxLengthRawLoginPassword)),
+		validation.Match(regexp.MustCompile(`^[!-~]{8,20}$`)).Error("パスワードは半角英数字記号8文字以上20文字以下で入力してください"),
 	)
 }
 
