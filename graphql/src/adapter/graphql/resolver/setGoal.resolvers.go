@@ -52,7 +52,7 @@ func (r *mutationResolver) SetGoal(ctx context.Context, input *graphql_model.Set
 	}
 
 	return &graphql_model.Goal{
-		ID:       vo.NewGoalID(goal.ID).String(),
+		ID:       vo.GoalID.New(goal.ID),
 		Name:     string(goal.Name),
 		Detail:   string(goal.Detail),
 		Deadline: deadline,

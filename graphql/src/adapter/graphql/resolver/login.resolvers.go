@@ -38,7 +38,7 @@ func (r *mutationResolver) Login(ctx context.Context, input *graphql_model.Login
 		Me: &graphql_model.Me{
 			Account: &graphql_model.Account{
 				// ログイン時はコンテキストからアカウントIDを取得できないためオブジェクトに詰める
-				ID: vo.NewAccountID(*accountID).String(),
+				ID: vo.AccountID.New(*accountID),
 			},
 		},
 	}, nil

@@ -23,7 +23,7 @@ func (r *meResolver) Account(ctx context.Context, obj *graphql_model.Me) (*graph
 		accountID = *aID
 	} else {
 		// ログイン時のみコンテキストにアカウントIDが設定されていないためオブジェクトから取得する
-		aIDByObj, err := vo.AccountID(obj.Account.ID).Decode()
+		aIDByObj, err := vo.AccountID.Decode(obj.Account.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -35,7 +35,7 @@ func (r *meResolver) Account(ctx context.Context, obj *graphql_model.Me) (*graph
 		return nil, err
 	}
 	return &graphql_model.Account{
-		ID:    vo.NewAccountID(account.ID).String(),
+		ID:    vo.AccountID.New(account.ID),
 		Name:  string(account.Name),
 		Email: string(account.Email),
 	}, nil

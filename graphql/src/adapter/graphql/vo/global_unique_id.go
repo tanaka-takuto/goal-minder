@@ -8,8 +8,8 @@ import (
 	"strings"
 )
 
-// GlobalUniqueID ユニークID
-type GlobalUniqueID string
+// globalUniqueID ユニークID
+type globalUniqueID string
 
 const (
 	// applicationName アプリケーション名
@@ -20,13 +20,13 @@ const (
 )
 
 // newGlobalUniqueID ユニークIDを作成する
-func newGlobalUniqueID(key string, id int) GlobalUniqueID {
+func newGlobalUniqueID(key string, id int) globalUniqueID {
 	base64ID := base64.StdEncoding.EncodeToString([]byte(strings.Join([]string{applicationName, config.Version(), key, fmt.Sprint(id)}, separator)))
-	return GlobalUniqueID(base64ID)
+	return globalUniqueID(base64ID)
 }
 
 // decodeByKey キーでIDを取得する
-func (guID GlobalUniqueID) decodeByKey(key string) (id *int, err error) {
+func (guID globalUniqueID) decodeByKey(key string) (id *int, err error) {
 	decodedIDBytes, err := base64.StdEncoding.DecodeString(string(guID))
 	if err != nil {
 		return nil, err
@@ -50,9 +50,4 @@ func (guID GlobalUniqueID) decodeByKey(key string) (id *int, err error) {
 	}
 
 	return &decodedID, nil
-}
-
-// String 文字列に変換する
-func (guID GlobalUniqueID) String() string {
-	return string(guID)
 }

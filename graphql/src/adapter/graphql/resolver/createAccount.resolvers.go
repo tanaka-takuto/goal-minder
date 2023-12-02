@@ -37,7 +37,7 @@ func (r *mutationResolver) CreateAccount(ctx context.Context, input *graphql_mod
 	modelContext.GetAuthorizationHelper(ctx).SetAuthorizationIntoCookie(authToken)
 
 	return &graphql_model.Account{
-		ID:    vo.NewAccountID(account.ID).String(),
+		ID:    vo.AccountID.New(account.ID),
 		Name:  string(account.Name),
 		Email: string(account.Email),
 	}, nil
