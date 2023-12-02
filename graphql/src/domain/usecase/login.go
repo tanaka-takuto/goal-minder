@@ -5,7 +5,7 @@ import (
 	"database/sql"
 
 	"goal-minder/domain/model"
-	applicationerror "goal-minder/domain/usecase/application_error"
+	"goal-minder/domain/usecase/application_error"
 	"goal-minder/sdk"
 )
 
@@ -18,21 +18,21 @@ type LoginInput struct {
 	Password model.RawLoginPassword
 }
 
-func NewLoginInput(email string, password string) (*LoginInput, *applicationerror.ValidationError) {
-	validationError := applicationerror.NewValidationError()
+func NewLoginInput(email string, password string) (*LoginInput, *application_error.ValidationError) {
+	validationErrorBuilder := application_error.NewValidationErrorBuilder()
 
 	e, err := model.NewAccountEmail(email)
 	if err != nil {
-		validationError.Add("email", err.Error())
+		validationErrorBuilder.AddError("email", err.Error())
 	}
 
 	p, err := model.NewRawLoginPassword(password)
 	if err != nil {
-		validationError.Add("password", err.Error())
+		validationErrorBuilder.AddError("password", err.Error())
 	}
 
-	if validationError.HasError() {
-		return nil, &validationError
+	if validationError := validationErrorBuilder.Build(); validationError != nil {
+		return nil, validationError
 	}
 
 	return &LoginInput{
@@ -41,9 +41,9 @@ func NewLoginInput(email string, password string) (*LoginInput, *applicationerro
 	}, nil
 }
 
-func (u LoginUsecase) Execute(ctx context.Context, db *sql.DB, input LoginInput) (*model.AccountID, *applicationerror.IncorrectEmailOrPasswordError, error) {
+func (u LoginUsecase) Execute(ctx context.Context, db *sql.DB, input LoginInput) (*model.AccountID, *application_error.IncorrectEmailOrPasswordError, error) {
 	var accountID *model.AccountID
-	var incorrectEmailOrPasswordError *applicationerror.IncorrectEmailOrPasswordError
+	var incorrectEmailOrPasswordError *application_error.IncorrectEmailOrPasswordError
 
 	err := Transaction(ctx, db, func(ctx context.Context, tx model.ContextExecutor) error {
 		// メールアドレスからアカウントを取得
@@ -54,7 +54,7 @@ func (u LoginUsecase) Execute(ctx context.Context, db *sql.DB, input LoginInput)
 
 		// ログインできるかチェック
 		if err := ap.Login(input.Password); err != nil {
-			incorrectEmailOrPasswordError = sdk.Ptr(applicationerror.NewIncorrectEmailOrPasswordError())
+			incorrectEmailOrPasswordError = sdk.Ptr(application_error.NewIncorrectEmailOrPasswordError())
 			return nil
 		}
 

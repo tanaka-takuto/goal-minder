@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"goal-minder/domain/model"
-	applicationerror "goal-minder/domain/usecase/application_error"
+	"goal-minder/domain/usecase/application_error"
 	"goal-minder/sdk"
 )
 
@@ -23,17 +23,17 @@ type SetGoalInput struct {
 	Scale     *model.GoalScale
 }
 
-func NewSetGoalInput(accountID model.AccountID, name string, detail string, deadline *time.Time, scale *int) (*SetGoalInput, *applicationerror.ValidationError) {
-	validationErr := applicationerror.NewValidationError()
+func NewSetGoalInput(accountID model.AccountID, name string, detail string, deadline *time.Time, scale *int) (*SetGoalInput, *application_error.ValidationError) {
+	validationErrorBuilder := application_error.NewValidationErrorBuilder()
 
 	n, err := model.NewGoalName(name)
 	if err != nil {
-		validationErr.Add("name", err.Error())
+		validationErrorBuilder.AddError("name", err.Error())
 	}
 
 	det, err := model.NewGoalDetail(detail)
 	if err != nil {
-		validationErr.Add("detail", err.Error())
+		validationErrorBuilder.AddError("detail", err.Error())
 	}
 
 	var ded *model.GoalDeadline
@@ -43,11 +43,11 @@ func NewSetGoalInput(accountID model.AccountID, name string, detail string, dead
 
 	s, err := model.NewGoalScale(*scale)
 	if err != nil {
-		validationErr.Add("scale", err.Error())
+		validationErrorBuilder.AddError("scale", err.Error())
 	}
 
-	if validationErr.HasError() {
-		return nil, &validationErr
+	if validationError := validationErrorBuilder.Build(); validationError != nil {
+		return nil, validationError
 	}
 
 	return &SetGoalInput{
@@ -59,9 +59,9 @@ func NewSetGoalInput(accountID model.AccountID, name string, detail string, dead
 	}, nil
 }
 
-func (u SetGoalUsecase) Execute(ctx context.Context, db *sql.DB, input SetGoalInput) (*model.Goal, *applicationerror.AccountNotFoundError, error) {
+func (u SetGoalUsecase) Execute(ctx context.Context, db *sql.DB, input SetGoalInput) (*model.Goal, *application_error.AccountNotFoundError, error) {
 	var goal *model.Goal
-	var accountNotFoundError *applicationerror.AccountNotFoundError
+	var accountNotFoundError *application_error.AccountNotFoundError
 	err := Transaction(ctx, db, func(ctx context.Context, tx model.ContextExecutor) error {
 
 		// アカウントの存在チェック
@@ -70,7 +70,7 @@ func (u SetGoalUsecase) Execute(ctx context.Context, db *sql.DB, input SetGoalIn
 			return err
 		}
 		if a == nil {
-			accountNotFoundError = sdk.Ptr(applicationerror.NewAccountNotFoundError())
+			accountNotFoundError = sdk.Ptr(application_error.NewAccountNotFoundError())
 			return nil
 		}
 

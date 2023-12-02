@@ -5,7 +5,7 @@ import (
 	"database/sql"
 
 	"goal-minder/domain/model"
-	applicationerror "goal-minder/domain/usecase/application_error"
+	"goal-minder/domain/usecase/application_error"
 	"goal-minder/sdk"
 )
 
@@ -20,26 +20,26 @@ type createAccountInput struct {
 	password model.RawLoginPassword
 }
 
-func NewCreateAccountInput(name string, email string, password string) (*createAccountInput, *applicationerror.ValidationError) {
-	validationError := applicationerror.NewValidationError()
+func NewCreateAccountInput(name string, email string, password string) (*createAccountInput, *application_error.ValidationError) {
+	validationErrorBuilder := application_error.NewValidationErrorBuilder()
 
 	n, err := model.NewAccountName(name)
 	if err != nil {
-		validationError.Add("name", err.Error())
+		validationErrorBuilder.AddError("name", err.Error())
 	}
 
 	e, err := model.NewAccountEmail(email)
 	if err != nil {
-		validationError.Add("email", err.Error())
+		validationErrorBuilder.AddError("email", err.Error())
 	}
 
 	p, err := model.NewRawLoginPassword(password)
 	if err != nil {
-		validationError.Add("password", err.Error())
+		validationErrorBuilder.AddError("password", err.Error())
 	}
 
-	if validationError.HasError() {
-		return nil, &validationError
+	if validationError := validationErrorBuilder.Build(); validationError != nil {
+		return nil, validationError
 	}
 
 	return &createAccountInput{
@@ -49,16 +49,16 @@ func NewCreateAccountInput(name string, email string, password string) (*createA
 	}, nil
 }
 
-func (u CreateAccountUsecase) Execute(ctx context.Context, db *sql.DB, input createAccountInput) (*model.Account, *applicationerror.EmailAlreadyExistsError, error) {
+func (u CreateAccountUsecase) Execute(ctx context.Context, db *sql.DB, input createAccountInput) (*model.Account, *application_error.EmailAlreadyExistsError, error) {
 	var account *model.Account
-	var emailAlreadyExistsError *applicationerror.EmailAlreadyExistsError
+	var emailAlreadyExistsError *application_error.EmailAlreadyExistsError
 	err := Transaction(ctx, db, func(ctx context.Context, tx model.ContextExecutor) error {
 
 		// メールアドレスの存在チェック
 		if exists, err := u.AccountRepository.ExistsAccountByEmail(ctx, tx, input.email); err != nil {
 			return err
 		} else if exists {
-			emailAlreadyExistsError = sdk.Ptr(applicationerror.NewEmailAlreadyExistsError())
+			emailAlreadyExistsError = sdk.Ptr(application_error.NewEmailAlreadyExistsError())
 			return nil
 		}
 
