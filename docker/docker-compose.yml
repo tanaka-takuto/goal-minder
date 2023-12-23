@@ -4,6 +4,7 @@ services:
   db:
     image: mysql:5.7
     container_name: GM-db
+    platform: linux/amd64
     command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-time-zone=Asia/Tokyo
     environment:
       MYSQL_DATABASE: GM

@@ -20,5 +20,5 @@ RUN go install github.com/cosmtrek/air@latest && \
     go install github.com/99designs/gqlgen@latest && \
     go install github.com/volatiletech/sqlboiler/v4@latest && \
     go install github.com/volatiletech/sqlboiler/v4/drivers/sqlboiler-mysql@latest && \
-    curl -OL https://github.com/k0kubun/sqldef/releases/download/v0.16.5/mysqldef_linux_386.tar.gz && \
-    tar xf mysqldef_linux_386.tar.gz -C /usr/local/bin/
+    curl -OL https://github.com/sqldef/sqldef/releases/download/v0.16.13/mysqldef_linux_amd64.tar.gz && \
+    tar xf mysqldef_linux_amd64.tar.gz -C /usr/local/bin/
